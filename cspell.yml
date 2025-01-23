@@ -1,0 +1,26 @@
+version: "0.2"
+language: en-gb
+dictionaries:
+    - powershell
+ignorePaths:
+    - package-lock.json
+words:
+    - bugprone
+    - linters
+ignoreWords:
+    - altera
+    - choco
+    - defenses
+    - hicpp
+    - linuxbrew
+    - linuxkernel
+    - llvmlibc
+    - nodiscard
+    - nolint
+    - noncommercially
+    - openmp
+    - reflow
+    - shellenv
+    - tictactoe
+    - wasd
+    - werror
