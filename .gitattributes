@@ -1,0 +1,21 @@
+# Auto detect text files and perform LF normalization
+*               text=auto   eol=lf
+
+# Config
+.clang-format   text
+.clang-tidy     text
+.gitattributes  text
+.gitignore      text
+.prettierignore text
+
+# Documents
+*.md            text        diff=markdown
+LICENSE         text
+
+# Scripts
+*.psd1          text
+*.psm1          text
+
+# Serialisation
+*.json          text
+*.yml           text
