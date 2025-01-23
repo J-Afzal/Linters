@@ -1,10 +1,6 @@
 # Auto detect text files and perform LF normalization
 *               text=auto   eol=lf
 
-# C++
-*.cpp           text        diff=cpp
-*.hpp           text        diff=cpp
-
 # Config
 .clang-format   text
 .clang-tidy     text
@@ -14,13 +10,7 @@
 
 # Documents
 *.md            text        diff=markdown
-*.rc            text
-*.txt           text
 LICENSE         text
-
-# Graphics
-*.ico           binary
-*.png           binary
 
 # Scripts
 *.psd1          text

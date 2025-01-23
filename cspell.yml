@@ -1,8 +1,10 @@
 version: "0.2"
 language: en-gb
 dictionaries:
+    - cpp
     - powershell
 ignorePaths:
+    - node_modules/
     - package-lock.json
 words:
     - bugprone
@@ -12,15 +14,10 @@ ignoreWords:
     - choco
     - defenses
     - hicpp
-    - linuxbrew
     - linuxkernel
     - llvmlibc
     - nodiscard
-    - nolint
     - noncommercially
     - openmp
     - reflow
-    - shellenv
-    - tictactoe
-    - wasd
     - werror

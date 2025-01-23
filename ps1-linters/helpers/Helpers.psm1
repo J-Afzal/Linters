@@ -16,18 +16,35 @@ $ErrorActionPreference = "Stop"
     .EXAMPLE
     Import-Module ./modules/TerminalGames.psd1
     npm install
-    Assert-ExternalCommandError -Verbose
+    Assert-ExternalCommandError -ThrowError -Verbose
 #>
 
 function Assert-ExternalCommandError {
 
     [CmdletBinding()]
-    param()
+    [OutputType([system.boolean])]
+    param(
+        [Parameter(Position=0, Mandatory=$false)]
+        [switch]
+        $ThrowError
+    )
 
     Write-Verbose "##[debug]Running Assert-ExternalCommandError..."
+    Write-Verbose "##[debug]Parameters:"
+    Write-Verbose "##[debug]    ThrowError: $ThrowError"
 
     if ($LASTEXITCODE -eq 1) {
-        Write-Error "Please resolve the above errors!"
+        if ($ThrowError) {
+            Write-Error "Please resolve the above errors!"
+        }
+
+        else {
+            return $true
+        }
+    }
+
+    elseif (-Not $ThrowError) {
+        return $false
     }
 }
 
@@ -56,9 +73,7 @@ function Get-AllFilePathsToTest {
     [OutputType([system.object[]])]
     param()
 
-    Write-Verbose "##[debug]Running Get-AllFilesToTest..."
-
-    $allFilesToTest = Get-FilteredFilePathsToTest -Verbose
+    $allFilesToTest = Get-FilteredFilePathsToTest -FileExtensionFilter "Exclude" -FileExtensions @("") -FileNameFilter "Exclude" -FileNames @("") -Verbose
 
     Write-Verbose "##[debug]Returning:"
     $allFilesToTest | ForEach-Object { "##[debug]    $_" } | Write-Verbose
@@ -120,7 +135,7 @@ function Get-FilteredFilePathsToTest {
         $FileNames
     )
 
-    Write-Verbose "##[debug]Running Get-FilesToTest..."
+    Write-Verbose "##[debug]Running Get-FilteredFilePathsToTest..."
     Write-Verbose "##[debug]Parameters:"
     Write-Verbose "##[debug]    FileExtensionFilter: $FileExtensionFilter"
     Write-Verbose "##[debug]    FileExtensions:"
@@ -151,7 +166,7 @@ function Get-FilteredFilePathsToTest {
         }
     }
 
-    Assert-ExternalCommandError -Verbose
+    Assert-ExternalCommandError -ThrowError
 
     Write-Verbose "##[debug]Returning:"
     $filteredFilesToTest | ForEach-Object { "##[debug]    $_" } | Write-Verbose
@@ -558,8 +573,8 @@ function Test-CodeUsingPSScriptAnalyzer {
 
         Write-Output "##[section]Running PSScriptAnalyzer against '$file'..."
 
-        Invoke-ScriptAnalyzer -Path $file -Settings ./modules/PSScriptAnalyzerSettings.psd1
-        $output = Invoke-ScriptAnalyzer -Path $file -Settings ./modules/PSScriptAnalyzerSettings.psd1
+        Invoke-ScriptAnalyzer -Path $file -Settings ./PSScriptAnalyzerSettings.psd1
+        $output = Invoke-ScriptAnalyzer -Path $file -Settings ./PSScriptAnalyzerSettings.psd1
 
         if ($output.Length -gt 0) {
             $filesWithErrors += $file
@@ -615,7 +630,7 @@ function Test-CSpellConfigurationFile {
     Write-Output "##[section]Running Test-CSpellConfigurationFile..."
 
     Write-Output "##[section]Retrieving contents of cspell.yml..."
-    $cspellFileContents = Get-Content -Path ./cspell.yml
+    $cspellFileContents = @(Get-Content -Path ./cspell.yml)
     Write-Verbose "##[debug]Finished retrieving the contents cspell.yml."
 
     Write-Output "##[section]Checking cspell.yml file..."
@@ -769,7 +784,14 @@ function Test-CSpellConfigurationFile {
 
     Write-Output "##[section]Checking 'ignorePaths' matches the .gitignore file..."
 
-    $gitignoreFileContents = Get-Content -Path ./.gitignore
+    if (-Not (Test-Path -Path "./.gitignore")) {
+        Write-Output "##[debug]No gitignore file found at current directory!"
+        $gitignoreFileContents = @()
+    }
+
+    else {
+        $gitignoreFileContents = @(Get-Content -Path ./.gitignore)
+    }
 
     # Add package-lock.json and re-sort gitattributes
     $gitignoreFileContents += "package-lock.json"
@@ -814,7 +836,7 @@ function Test-CSpellConfigurationFile {
 
     Write-Verbose "##[debug]Retrieving all files to check..."
     # Same file list as found in Test-CodeUsingCSpell but also exclude cspell.yml (assumes cspell.yml is the only file with a file name of cspell)
-    $allFilesToCheck = Get-FilteredFilePathsToTest -FileExtensionFilter "Exclude" -FileExtensions @("ico", "png") -FileNameFilter "Exclude" -FileNames @("cspell", "package-lock")
+    $allFilesToCheck = @(Get-FilteredFilePathsToTest -FileExtensionFilter "Exclude" -FileExtensions @("ico", "png") -FileNameFilter "Exclude" -FileNames @("cspell", "package-lock") -Verbose)
 
     [Collections.Generic.List[String]] $redundantCSpellWords = $cspellWords
     [Collections.Generic.List[String]] $redundantCSpellIgnoreWords = $cspellIgnoreWords
@@ -823,7 +845,7 @@ function Test-CSpellConfigurationFile {
 
         Write-Verbose "##[debug]Reading contents of '$file'..."
 
-        $fileContents = Get-Content -Path $file
+        $fileContents = @(Get-Content -Path $file)
 
         foreach ($line in $fileContents) {
 
@@ -904,7 +926,7 @@ function Test-GitAttributesFile {
     Write-Output "##[section]Running Test-GitattributesFile..."
 
     Write-Output "##[section]Retrieving contents of .gitattributes..."
-    $gitattributesFileContents = Get-Content -Path ./.gitattributes
+    $gitattributesFileContents = @(Get-Content -Path ./.gitattributes)
     Write-Verbose "##[debug]Finished retrieving the contents .gitattributes."
 
     Write-Output "##[section]Retrieving all unique file extensions and unique files without a file extension..."
@@ -958,7 +980,7 @@ function Test-GitAttributesFile {
         if ($null -eq $lineBeforeAndIncludingComment) {
             Write-Verbose "##[debug]Current line is code: '$currentLine'"
 
-            if (-not (
+            if (-Not (
                     $currentLine -Match "^\* +text=auto +eol=lf$" -or
                     # File extensions with or without * wildcard
                     $currentLine -Match "^\*?\.[a-z0-9-]+ +binary$" -or
@@ -984,29 +1006,22 @@ function Test-GitAttributesFile {
                 $fileExtensionOrFileWithoutExtension = $currentLine | Select-String -Pattern "(^\*?\.[a-z0-9-]+)|^[a-zA-Z0-9-]+"
 
                 if ($null -ne $fileExtensionOrFileWithoutExtension) {
-                    Write-Output "HEREEEEE1"
                     $entry = $fileExtensionOrFileWithoutExtension.Matches.Value
-                    Write-Output "HEREEEEE2: $uniqueGitTrackedFileExtensions and $uniqueGitTrackedFileNamesWithoutExtensions"
-
 
                     if ($uniqueGitTrackedFileExtensions.Contains("\$($entry.TrimStart("*"))") -or
                         $uniqueGitTrackedFileNamesWithoutExtensions.Contains($entry)) {
-                            Write-Output "HEREEEEE3"
 
                         if ($foundEntries.Contains($entry) -or
                             $foundEntries.Contains($entry)) {
-                            Write-Output "HEREEEEE4"
                             $lintingErrors += @{lineNumber = $currentLineNumber; line = "'$currentLine'"; errorMessage = "Duplicate entry." }
                         }
 
                         else {
-                            Write-Output "HEREEEEE5"
                             $foundEntries += $entry
                         }
                     }
 
                     else {
-                        Write-Output "HEREEEEE6"
                         $lintingErrors += @{lineNumber = $currentLineNumber; line = "'$currentLine'"; errorMessage = "Redundant entry." }
                     }
                 }
@@ -1042,7 +1057,7 @@ function Test-GitAttributesFile {
             }
         }
 
-        if (-not $foundMatch) {
+        if (-Not $foundMatch) {
             $lintingErrors += @{lineNumber = "-"; line = "-"; errorMessage = "'$($fileExtensionOrFileNameWithoutExtension.TrimStart("\"))' does not have a .gitattributes entry." }
         }
     }
@@ -1095,7 +1110,7 @@ function Test-GitIgnoreFile {
     }
 
     Write-Output "##[section]Retrieving contents of .gitignore..."
-    $gitignoreFileContents = Get-Content -Path ./.gitignore
+    $gitignoreFileContents = @(Get-Content -Path ./.gitignore)
     Write-Verbose "##[debug]Finished retrieving the contents .gitignore."
 
     Write-Output "##[section]Checking .gitignore file..."
@@ -1199,11 +1214,18 @@ function Test-PrettierIgnoreFile {
     Write-Output "##[section]Running Test-PrettierIgnoreFile..."
 
     Write-Output "##[section]Retrieving contents of .prettierignore..."
-    $prettierIgnoreFileContents = Get-Content -Path ./.prettierignore
+    $prettierIgnoreFileContents = @(Get-Content -Path ./.prettierignore)
     Write-Verbose "##[debug]Finished retrieving the contents .prettierignore."
 
     Write-Output "##[section]Retrieving contents of .gitignore..."
-    $gitignoreFileContents = Get-Content -Path ./.gitignore
+    if (-Not (Test-Path -Path "./.gitignore")) {
+        Write-Output "##[debug]No gitignore file found at current directory!"
+        $gitignoreFileContents = @()
+    }
+
+    else {
+        $gitignoreFileContents = @(Get-Content -Path ./.gitignore)
+    }
     Write-Verbose "##[debug]Finished retrieving the contents .gitignore."
 
     Write-Output "##[section]Checking that .prettierignore matches .gitignore exactly..."
