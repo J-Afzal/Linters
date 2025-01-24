@@ -362,7 +362,7 @@ function Test-CodeUsingClang {
     $filesToTest = Get-FilteredFilePathsToTest -FileExtensionFilter "Include" -FileExtensions @("cpp", "hpp") -Verbose
 
     if ($null -eq $filesToTest) {
-        Write-Verbose "##[section]No C++ files found!"
+        Write-Output "##[warning]No C++ files found to lint! Please check if this is expected!"
         return
     }
 
@@ -375,7 +375,7 @@ function Test-CodeUsingClang {
 
         cmake -S . -B ./build -G "Ninja"
 
-        Assert-ExternalCommandError -ThrowError -Verbose
+        Assert-ExternalCommandError -ThrowError
 
         if (-Not (Test-Path -Path "./build/compile_commands.json")) {
             Write-Error "##[error]The 'compile_commands.json' file still not found!"
@@ -445,8 +445,10 @@ function Test-CodeUsingClang {
     }
 
     if ($filesWithErrors.Length -gt 0) {
-        Write-Verbose "##[debug]The following files do not conform to clang-tidy/clang-format standards:"
-        $filesWithErrors | ForEach-Object { "##[debug]$_" } | Write-Verbose
+        $ErrorActionPreference = "Continue"
+        Write-Error "##[error]The following files do not conform to clang-tidy/clang-format standards:"
+        $filesWithErrors | ForEach-Object { "##[error]$_" } | Write-Error
+        $ErrorActionPreference = "Stop"
         Write-Error "##[error]Please resolve the above errors!"
     }
 
@@ -480,8 +482,8 @@ function Test-CodeUsingCSpell {
 
     Write-Output "##[section]Running Test-CodeUsingCSpell..."
 
-    Write-Verbose "##[debug]Using the following cspell version..."
-    (npx cspell --version) | ForEach-Object { "##[debug]$_" } | Write-Verbose
+    Write-Output "##[debug]Using the following cspell version..."
+    (npx cspell --version) | ForEach-Object { "##[debug]$_" } | Write-Output
 
     Write-Output "##[section]Retrieving all files to test against cspell..."
     $filesToTest = Get-FilteredFilePathsToTest -FileExtensionFilter "Exclude" -FileExtensions @("ico", "png") -FileNameFilter "Exclude" @("package-lock") -Verbose
@@ -492,7 +494,7 @@ function Test-CodeUsingCSpell {
 
         Write-Output "##[section]Running cspell against '$file'..."
 
-        (npx -c "cspell --unique --show-context --no-progress --no-summary $file") | ForEach-Object { "##[debug]$_" } | Write-Verbose
+        (npx -c "cspell --unique --show-context --no-progress --no-summary $file") | ForEach-Object { "##[debug]$_" } | Write-Output
 
         if (Assert-ExternalCommandError) {
             $filesWithErrors += $file
@@ -500,8 +502,10 @@ function Test-CodeUsingCSpell {
     }
 
     if ($filesWithErrors.Length -gt 0) {
-        Write-Verbose "##[debug]The following files have cspell errors:"
-        $filesWithErrors | ForEach-Object { "##[debug]$_" } | Write-Verbose
+        $ErrorActionPreference = "Continue"
+        Write-Error "##[error]The following files have cspell errors:"
+        $filesWithErrors | ForEach-Object { "##[error]$_" } | Write-Error
+        $ErrorActionPreference = "Stop"
         Write-Error "##[error]Please resolve the above errors!"
     }
 
@@ -555,8 +559,10 @@ function Test-CodeUsingPrettier {
     }
 
     if ($filesWithErrors.Length -gt 0) {
-        Write-Verbose "##[debug]The following files have prettier errors:"
-        $filesWithErrors | ForEach-Object { "##[debug]$_" } | Write-Verbose
+        $ErrorActionPreference = "Continue"
+        Write-Error "##[error]The following files have prettier errors:"
+        $filesWithErrors | ForEach-Object { "##[error]$_" } | Write-Error
+        $ErrorActionPreference = "Stop"
         Write-Error "##[error]Please resolve the above errors!"
     }
 
@@ -608,8 +614,10 @@ function Test-CodeUsingPSScriptAnalyzer {
     }
 
     if ($filesWithErrors.Length -gt 0) {
-        Write-Verbose "##[debug]The following files have PSScriptAnalyzer errors:"
-        $filesWithErrors | ForEach-Object { "##[debug]$_" } | Write-Verbose
+        $ErrorActionPreference = "Continue"
+        Write-Error "##[error]The following files have PSScriptAnalyzer errors:"
+        $filesWithErrors | ForEach-Object { "##[error]$_" } | Write-Error
+        $ErrorActionPreference = "Stop"
         Write-Error "##[error]Please resolve the above errors!"
     }
 
