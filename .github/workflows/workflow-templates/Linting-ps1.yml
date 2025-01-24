@@ -1,23 +1,17 @@
 name: Linting
 
-run-name: CI - ${{ github.run_number }} - ${{ github.head_ref }}
-
 on:
-    pull_request:
-        branches:
-            - main
-            - master
+    workflow_call
 
 jobs:
     lint:
-        strategy:
-            matrix:
-                os:
-                    - macos-latest
-                    - ubuntu-latest
-                    - windows-latest
-
         runs-on: ${{ matrix.os }}
+
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [macos-latest, ubuntu-latest, windows-latest]
+
         defaults:
             run:
                 shell: pwsh
