@@ -147,22 +147,22 @@ function Get-FilteredFilePathsToTest {
     if ($FileExtensionFilter -eq "Include") {
 
         if ($FileNameFilter -eq "Include") {
-            $filteredFilesToTest = git ls-files -c | ForEach-Object { if (($_.Split(".")[-1] -In $FileExtensions) -And ($_.Split(".")[-2] -In $FileNames)) { $_ } }
+            $filteredFilesToTest = git ls-files -c | ForEach-Object { if (($_.Split(".")[-1] -In $FileExtensions) -And ($_.Split(".")[-2] -In $FileNames) -And (-Not $_.StartsWith("submodules"))) { $_ } } # Exclude submodules folder
         }
 
         else {
-            $filteredFilesToTest = git ls-files -c | ForEach-Object { if (($_.Split(".")[-1] -In $FileExtensions) -And ($_.Split(".")[-2] -NotIn $FileNames)) { $_ } }
+            $filteredFilesToTest = git ls-files -c | ForEach-Object { if (($_.Split(".")[-1] -In $FileExtensions) -And ($_.Split(".")[-2] -NotIn $FileNames) -And (-Not $_.StartsWith("submodules"))) { $_ } } # Exclude submodules folder
         }
     }
 
     else {
 
         if ($FileNameFilter -eq "Include") {
-            $filteredFilesToTest = git ls-files -c | ForEach-Object { if (($_.Split(".")[-1] -NotIn $FileExtensions) -And ($_.Split(".")[-2] -In $FileNames)) { $_ } }
+            $filteredFilesToTest = git ls-files -c | ForEach-Object { if (($_.Split(".")[-1] -NotIn $FileExtensions) -And ($_.Split(".")[-2] -In $FileNames) -And (-Not $_.StartsWith("submodules"))) { $_ } } # Exclude submodules folder
         }
 
         else {
-            $filteredFilesToTest = git ls-files -c | ForEach-Object { if (($_.Split(".")[-1] -NotIn $FileExtensions) -And ($_.Split(".")[-2] -NotIn $FileNames)) { $_ } }
+            $filteredFilesToTest = git ls-files -c | ForEach-Object { if (($_.Split(".")[-1] -NotIn $FileExtensions) -And ($_.Split(".")[-2] -NotIn $FileNames) -And (-Not $_.StartsWith("submodules"))) { $_ } } # Exclude submodules folder
         }
     }
 
@@ -1148,7 +1148,7 @@ function Test-GitIgnoreFile {
                     $lintingErrors += @{lineNumber = $currentLineNumber; line = "'$currentLine'"; errorMessage = "Duplicate entry." }
                 }
 
-                if (-Not (Test-Path -Path $currentLine) -And $currentLine -NotIn (".vs/", ".vscode/")) { # Exclude IDE directories
+                if (-Not (Test-Path -Path $currentLine) -And $currentLine -NotIn (".vs/", ".vscode/", "build/")) { # Exclude standard IDE and build folders
                     $lintingErrors += @{lineNumber = $currentLineNumber; line = "'$currentLine'"; errorMessage = "Redundant or malformed entry." }
                 }
 
