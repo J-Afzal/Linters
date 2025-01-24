@@ -445,11 +445,9 @@ function Test-CodeUsingClang {
     }
 
     if ($filesWithErrors.Length -gt 0) {
-        $ErrorActionPreference = "Continue"
-        Write-Error "##[error]The following files do not conform to clang-tidy/clang-format standards:"
-        $filesWithErrors | ForEach-Object { "##[error]$_" } | Write-Error
-        $ErrorActionPreference = "Stop"
-        Write-Error "##[error]Please resolve the above errors!"
+        $errorMessage = "##[error]The following files have clang-tidy/clang-format errors:`n"
+        $filesWithErrors | ForEach-Object { $errorMessage += "##[error]$_`n" }
+        Write-Error $errorMessage
     }
 
     else {
@@ -502,11 +500,9 @@ function Test-CodeUsingCSpell {
     }
 
     if ($filesWithErrors.Length -gt 0) {
-        $ErrorActionPreference = "Continue"
-        Write-Error "##[error]The following files have cspell errors:"
-        $filesWithErrors | ForEach-Object { "##[error]$_" } | Write-Error
-        $ErrorActionPreference = "Stop"
-        Write-Error "##[error]Please resolve the above errors!"
+        $errorMessage = "##[error]The following files have cspell errors:`n"
+        $filesWithErrors | ForEach-Object { $errorMessage += "##[error]$_`n" }
+        Write-Error $errorMessage
     }
 
     else {
@@ -559,11 +555,9 @@ function Test-CodeUsingPrettier {
     }
 
     if ($filesWithErrors.Length -gt 0) {
-        $ErrorActionPreference = "Continue"
-        Write-Error "##[error]The following files have prettier errors:"
-        $filesWithErrors | ForEach-Object { "##[error]$_" } | Write-Error
-        $ErrorActionPreference = "Stop"
-        Write-Error "##[error]Please resolve the above errors!"
+        $errorMessage = "##[error]The following files have prettier errors:`n"
+        $filesWithErrors | ForEach-Object { $errorMessage += "##[error]$_`n" }
+        Write-Error $errorMessage
     }
 
     else {
@@ -614,11 +608,9 @@ function Test-CodeUsingPSScriptAnalyzer {
     }
 
     if ($filesWithErrors.Length -gt 0) {
-        $ErrorActionPreference = "Continue"
-        Write-Error "##[error]The following files have PSScriptAnalyzer errors:"
-        $filesWithErrors | ForEach-Object { "##[error]$_" } | Write-Error
-        $ErrorActionPreference = "Stop"
-        Write-Error "##[error]Please resolve the above errors!"
+        $errorMessage = "##[error]The following files have PSScriptAnalyzer errors:`n"
+        $filesWithErrors | ForEach-Object { $errorMessage += "##[error]$_`n" }
+        Write-Error $errorMessage
     }
 
     else {
