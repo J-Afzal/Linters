@@ -22,57 +22,56 @@ jobs:
             - name: Install linting dependencies
               id: dependencies
               run: |
-                  Import-Module ./modules/TerminalGames.psd1
+                  Import-Module ./linters-ps1/Linters.psd1
                   Install-LintingDependencies -Platform "${{ matrix.os }}" -Verbose
 
             - name: Run gitignore linter
               if: (success() || failure()) && steps.dependencies.outcome == 'success'
               run: |
-                  Import-Module ./modules/TerminalGames.psd1
+                  Import-Module ./linters-ps1/Linters.psd1
                   Test-GitIgnoreFile -Verbose
 
             - name: Run gitattributes linter
               if: (success() || failure()) && steps.dependencies.outcome == 'success'
               run: |
-                  Import-Module ./modules/TerminalGames.psd1
+                  Import-Module ./linters-ps1/Linters.psd1
                   Test-GitAttributesFile -Verbose
 
             - name: Run cspell config linter
               if: (success() || failure()) && steps.dependencies.outcome == 'success'
               run: |
-                  Import-Module ./modules/TerminalGames.psd1
+                  Import-Module ./linters-ps1/Linters.psd1
                   Test-CSpellConfigurationFile -Verbose
 
             - name: Run prettierignore linter
               if: (success() || failure()) && steps.dependencies.outcome == 'success'
               run: |
-                  Import-Module ./modules/TerminalGames.psd1
+                  Import-Module ./linters-ps1/Linters.psd1
                   Test-PrettierIgnoreFile -Verbose
 
             - name: Run cspell
               if: (success() || failure()) && steps.dependencies.outcome == 'success'
               run: |
-                  Import-Module ./modules/TerminalGames.psd1
+                  Import-Module ./linters-ps1/Linters.psd1
                   Test-CodeUsingCSpell -Verbose
 
             - name: Run prettier
               if: (success() || failure()) && steps.dependencies.outcome == 'success'
               run: |
-                  Import-Module ./modules/TerminalGames.psd1
+                  Import-Module ./linters-ps1/Linters.psd1
                   Test-CodeUsingPrettier -Verbose
 
             - name: Run PSScriptAnalyzer
               if: (success() || failure()) && steps.dependencies.outcome == 'success'
               run: |
-                  Import-Module ./modules/TerminalGames.psd1
+                  Import-Module ./linters-ps1/Linters.psd1
                   Test-CodeUsingPSScriptAnalyzer -Verbose
 
             - name: Run clang-tidy and clang-format
               if: (success() || failure()) && steps.dependencies.outcome == 'success'
               shell: bash
               run: |
-                  # Install the latest version of clang-tidy and clang-format
-
+                  # Install the latest version of clang-tidy and clang-format for each os
                   if [ ${{ matrix.os }} = macos-latest ]
                   then
                       brew install llvm
@@ -96,4 +95,4 @@ jobs:
                       choco upgrade llvm -y
                   fi
 
-                  pwsh -command "Import-Module ./modules/TerminalGames.psd1; Test-CodeUsingClang -Verbose"
+                  pwsh -command "Import-Module ./linters-ps1/Linters.psd1; Test-CodeUsingClang -Verbose"
