@@ -10,3 +10,5 @@ on:
 jobs:
     linters-ps1:
         uses: ./.github/workflows/Linting-ps1.yml
+        with:
+            run_clang_tools_linter: false

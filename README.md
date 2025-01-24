@@ -41,6 +41,7 @@ Add CD pipeline
 Other Languages:
     Lua
     Go
+    Python
     Rust
 
 -->
