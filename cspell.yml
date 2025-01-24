@@ -14,10 +14,12 @@ ignoreWords:
     - choco
     - defenses
     - hicpp
+    - linuxbrew
     - linuxkernel
     - llvmlibc
     - nodiscard
     - noncommercially
     - openmp
     - reflow
+    - shellenv
     - werror

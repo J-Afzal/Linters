@@ -92,19 +92,5 @@ function Install-LintingDependencies {
 
     Write-Verbose "##[debug]Finished installing npm dependencies."
 
-    if (-Not (Test-Path -Path "./build/compile_commands.json")) {
-
-        Write-Output "##[section]Configuring CMake to generate the 'compile_commands.json' file..."
-
-        # This will fail if ninja is not installed so Install-BuildDependencies is called.
-        Install-BuildDependencies -Platform $Platform
-
-        cmake -S . -B ./build -G "Ninja"
-
-        Assert-ExternalCommandError -ThrowError -Verbose
-
-        Write-Verbose "##[debug]Finished configuring CMake to generate the 'compile_commands.json' file."
-    }
-
     Write-Output "##[section]All linting dependencies installed!"
 }

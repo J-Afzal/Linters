@@ -2,7 +2,7 @@
     ModuleVersion = "1.0"
 
     NestedModules = @(
-        "./ps1-linters/helpers/Helpers.psm1"
+        "./linters-ps1/helpers/Helpers.psm1"
     )
 
     FunctionsToExport = @(
