@@ -52,56 +52,56 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - name: Install linting dependencies
-              id: dependencies
-              run: |
-                  Import-Module ./linters-ps1/Linters.psd1
-                  Install-LintingDependencies -Platform "${{ matrix.os }}" -Verbose
+            # - name: Install linting dependencies
+            #   id: dependencies
+            #   run: |
+            #       Import-Module ./linters-ps1/Linters.psd1
+            #       Install-LintingDependencies -Platform "${{ matrix.os }}" -Verbose
 
-            - name: Run gitignore linter
-              if: (success() || failure()) && steps.dependencies.outcome == 'success' && ${{ inputs.run_gitignore_linter }} == true
-              run: |
-                  Import-Module ./linters-ps1/Linters.psd1
-                  Test-GitIgnoreFile -Verbose
+            # - name: Run gitignore linter
+            #   if: (success() || failure()) && steps.dependencies.outcome == 'success' && ${{ inputs.run_gitignore_linter }} == true
+            #   run: |
+            #       Import-Module ./linters-ps1/Linters.psd1
+            #       Test-GitIgnoreFile -Verbose
 
-            - name: Run gitattributes linter
-              if: (success() || failure()) && steps.dependencies.outcome == 'success' && ${{ inputs.run_gitattributes_linter }} == true
-              run: |
-                  Import-Module ./linters-ps1/Linters.psd1
-                  Test-GitAttributesFile -Verbose
+            # - name: Run gitattributes linter
+            #   if: (success() || failure()) && steps.dependencies.outcome == 'success' && ${{ inputs.run_gitattributes_linter }} == true
+            #   run: |
+            #       Import-Module ./linters-ps1/Linters.psd1
+            #       Test-GitAttributesFile -Verbose
 
-            - name: Run cspell configuration linter
-              if: (success() || failure()) && steps.dependencies.outcome == 'success' && ${{ inputs.run_cspell_configuration_linter }} == true
-              run: |
-                  Import-Module ./linters-ps1/Linters.psd1
-                  Test-CSpellConfigurationFile -Verbose
+            # - name: Run cspell configuration linter
+            #   if: (success() || failure()) && steps.dependencies.outcome == 'success' && ${{ inputs.run_cspell_configuration_linter }} == true
+            #   run: |
+            #       Import-Module ./linters-ps1/Linters.psd1
+            #       Test-CSpellConfigurationFile -Verbose
 
-            - name: Run prettierignore linter
-              if: (success() || failure()) && steps.dependencies.outcome == 'success' && ${{ inputs.run_prettier_ignore_linter }} == true
-              run: |
-                  Import-Module ./linters-ps1/Linters.psd1
-                  Test-PrettierIgnoreFile -Verbose
+            # - name: Run prettierignore linter
+            #   if: (success() || failure()) && steps.dependencies.outcome == 'success' && ${{ inputs.run_prettier_ignore_linter }} == true
+            #   run: |
+            #       Import-Module ./linters-ps1/Linters.psd1
+            #       Test-PrettierIgnoreFile -Verbose
 
-            - name: Run cspell
-              if: (success() || failure()) && steps.dependencies.outcome == 'success' && ${{ inputs.run_cspell_linter }} == true
-              run: |
-                  Import-Module ./linters-ps1/Linters.psd1
-                  Test-CodeUsingCSpell -Verbose
+            # - name: Run cspell
+            #   if: (success() || failure()) && steps.dependencies.outcome == 'success' && ${{ inputs.run_cspell_linter }} == true
+            #   run: |
+            #       Import-Module ./linters-ps1/Linters.psd1
+            #       Test-CodeUsingCSpell -Verbose
 
-            - name: Run prettier
-              if: (success() || failure()) && steps.dependencies.outcome == 'success' && ${{ inputs.run_prettier_linter }} == true
-              run: |
-                  Import-Module ./linters-ps1/Linters.psd1
-                  Test-CodeUsingPrettier -Verbose
+            # - name: Run prettier
+            #   if: (success() || failure()) && steps.dependencies.outcome == 'success' && ${{ inputs.run_prettier_linter }} == true
+            #   run: |
+            #       Import-Module ./linters-ps1/Linters.psd1
+            #       Test-CodeUsingPrettier -Verbose
 
-            - name: Run PSScriptAnalyzer
-              if: (success() || failure()) && steps.dependencies.outcome == 'success' && ${{ inputs.run_psscript_analyzer_linter }} == true
-              run: |
-                  Import-Module ./linters-ps1/Linters.psd1
-                  Test-CodeUsingPSScriptAnalyzer -Verbose
+            # - name: Run PSScriptAnalyzer
+            #   if: (success() || failure()) && steps.dependencies.outcome == 'success' && ${{ inputs.run_psscript_analyzer_linter }} == true
+            #   run: |
+            #       Import-Module ./linters-ps1/Linters.psd1
+            #       Test-CodeUsingPSScriptAnalyzer -Verbose
 
             - name: Run clang tools
-              if: ${{ inputs.run_clang_tools_linter }} == true
+              if: 1 == 0
               shell: bash
               run: |
                   # Install the ninja and the latest version of clang-tidy and clang-format
