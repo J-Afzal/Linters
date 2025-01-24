@@ -9,4 +9,4 @@ on:
 
 jobs:
     linters-ps1:
-        uses: J-Afzal/Linters/.github/workflows/workflow-templates/Linting-ps1.yml@main
+        uses: ./.github/workflows/Linting-ps1.yml
