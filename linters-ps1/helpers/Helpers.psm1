@@ -306,7 +306,7 @@ function Test-CodeUsingAllLinters {
 
     Test-CodeUsingPSScriptAnalyzer -Verbose
 
-    Test-CodeUsingClang -FixClangTidyErrors:$FixClangTidyErrors -FixClangFormatErrors:$FixClangFormatErrors -Verbose
+    Test-CodeUsingClangTools -FixClangTidyErrors:$FixClangTidyErrors -FixClangFormatErrors:$FixClangFormatErrors -Verbose
 
     Write-Output "##[section]All linting tests passed!"
 }
@@ -330,10 +330,10 @@ function Test-CodeUsingAllLinters {
 
     .EXAMPLE
     Import-Module ./modules/TerminalGames.psd1
-    Test-CodeUsingClang -FixClangTidyErrors -FixClangFormatErrors -Verbose
+    Test-CodeUsingClangTools -FixClangTidyErrors -FixClangFormatErrors -Verbose
 #>
 
-function Test-CodeUsingClang {
+function Test-CodeUsingClangTools {
 
     [CmdletBinding()]
     param
@@ -347,7 +347,7 @@ function Test-CodeUsingClang {
         $FixClangFormatErrors
     )
 
-    Write-Output "##[section]Running Test-CodeUsingClang..."
+    Write-Output "##[section]Running Test-CodeUsingClangTools..."
     Write-Verbose "##[debug]Parameters:"
     Write-Verbose "##[debug]    FixClangTidyErrors: $FixClangTidyErrors"
     Write-Verbose "##[debug]    FixClangFormatErrors: $FixClangFormatErrors"
@@ -364,27 +364,6 @@ function Test-CodeUsingClang {
     if ($null -eq $filesToTest) {
         Write-Output "##[warning]No C++ files found to lint! Please check if this is expected!"
         return
-    }
-
-    if (-Not (Test-Path -Path "./build/compile_commands.json")) {
-
-        Write-Output "##[section]Configuring CMake to generate the 'compile_commands.json' file..."
-
-        # This will fail if ninja is not installed so Install-BuildDependencies.
-        Install-BuildDependencies -Platform $Platform
-
-        cmake -S . -B ./build -G "Ninja"
-
-        Assert-ExternalCommandError -ThrowError
-
-        if (-Not (Test-Path -Path "./build/compile_commands.json")) {
-            Write-Error "##[error]The 'compile_commands.json' file still not found!"
-        }
-
-        else {
-            Write-Verbose "##[debug]Finished configuring CMake and the 'compile_commands.json' file has been found."
-        }
-
     }
 
     $filesWithErrors = @()

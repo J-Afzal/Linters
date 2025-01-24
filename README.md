@@ -30,15 +30,16 @@ configuring CMake for the clang-based linters).
 <!--
 TODO
 
-Add ## Getting Started and  ## General Information
+Add ## Getting Started and ## General Information
 
 Add azure pipeline templates (and add to other repos)
 
-Only install if C++ files found.
+Add CD pipeline
 
 Other Languages:
     Lua
     Go
+    Python
     Rust
 
 -->
