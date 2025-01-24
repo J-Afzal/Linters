@@ -361,6 +361,32 @@ function Test-CodeUsingClang {
     Write-Output "##[section]Retrieving all files to test against clang-tidy and clang-format..."
     $filesToTest = Get-FilteredFilePathsToTest -FileExtensionFilter "Include" -FileExtensions @("cpp", "hpp") -Verbose
 
+    if ($null -eq $filesToTest) {
+        Write-Verbose "##[section]No C++ files found!"
+        return
+    }
+
+    if (-Not (Test-Path -Path "./build/compile_commands.json")) {
+
+        Write-Output "##[section]Configuring CMake to generate the 'compile_commands.json' file..."
+
+        # This will fail if ninja is not installed so Install-BuildDependencies.
+        Install-BuildDependencies -Platform $Platform
+
+        cmake -S . -B ./build -G "Ninja"
+
+        Assert-ExternalCommandError -ThrowError -Verbose
+
+        if (-Not (Test-Path -Path "./build/compile_commands.json")) {
+            Write-Error "##[error]The 'compile_commands.json' file still not found!"
+        }
+
+        else {
+            Write-Verbose "##[debug]Finished configuring CMake and the 'compile_commands.json' file has been found."
+        }
+
+    }
+
     $filesWithErrors = @()
 
     foreach ($file in $filesToTest) {
