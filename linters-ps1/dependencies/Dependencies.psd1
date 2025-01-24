@@ -6,7 +6,6 @@
     )
 
     FunctionsToExport = @(
-        "Install-BuildDependencies",
         "Install-LintingDependencies"
     )
 }

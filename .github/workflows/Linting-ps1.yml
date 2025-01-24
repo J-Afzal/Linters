@@ -1,7 +1,40 @@
 name: Linting
 
 on:
-    workflow_call
+    workflow_call:
+        inputs:
+            run_gitignore_linter:
+                required: false
+                type: boolean
+                default: true
+            run_gitattributes_linter:
+                required: false
+                type: boolean
+                default: true
+            run_cspell_configuration_linter:
+                required: false
+                type: boolean
+                default: true
+            run_prettier_ignore_linter:
+                required: false
+                type: boolean
+                default: true
+            run_cspell_linter:
+                required: false
+                type: boolean
+                default: true
+            run_prettier_linter:
+                required: false
+                type: boolean
+                default: true
+            run_psscript_analyzer_linter:
+                required: false
+                type: boolean
+                default: true
+            run_clang_tools_linter:
+                required: false
+                type: boolean
+                default: true
 
 jobs:
     lint:
@@ -26,54 +59,55 @@ jobs:
                   Install-LintingDependencies -Platform "${{ matrix.os }}" -Verbose
 
             - name: Run gitignore linter
-              if: (success() || failure()) && steps.dependencies.outcome == 'success'
+              if: (success() || failure()) && steps.dependencies.outcome == 'success' && ${{ inputs.run_gitignore_linter }}
               run: |
                   Import-Module ./linters-ps1/Linters.psd1
                   Test-GitIgnoreFile -Verbose
 
             - name: Run gitattributes linter
-              if: (success() || failure()) && steps.dependencies.outcome == 'success'
+              if: (success() || failure()) && steps.dependencies.outcome == 'success' && ${{ inputs.run_gitattributes_linter }}
               run: |
                   Import-Module ./linters-ps1/Linters.psd1
                   Test-GitAttributesFile -Verbose
 
-            - name: Run cspell config linter
-              if: (success() || failure()) && steps.dependencies.outcome == 'success'
+            - name: Run cspell configuration linter
+              if: (success() || failure()) && steps.dependencies.outcome == 'success' && ${{ inputs.run_cspell_configuration_linter }}
               run: |
                   Import-Module ./linters-ps1/Linters.psd1
                   Test-CSpellConfigurationFile -Verbose
 
             - name: Run prettierignore linter
-              if: (success() || failure()) && steps.dependencies.outcome == 'success'
+              if: (success() || failure()) && steps.dependencies.outcome == 'success' && ${{ inputs.run_prettier_ignore_linter }}
               run: |
                   Import-Module ./linters-ps1/Linters.psd1
                   Test-PrettierIgnoreFile -Verbose
 
             - name: Run cspell
-              if: (success() || failure()) && steps.dependencies.outcome == 'success'
+              if: (success() || failure()) && steps.dependencies.outcome == 'success' && ${{ inputs.run_cspell_linter }}
               run: |
                   Import-Module ./linters-ps1/Linters.psd1
                   Test-CodeUsingCSpell -Verbose
 
             - name: Run prettier
-              if: (success() || failure()) && steps.dependencies.outcome == 'success'
+              if: (success() || failure()) && steps.dependencies.outcome == 'success' && ${{ inputs.run_prettier_linter }}
               run: |
                   Import-Module ./linters-ps1/Linters.psd1
                   Test-CodeUsingPrettier -Verbose
 
             - name: Run PSScriptAnalyzer
-              if: (success() || failure()) && steps.dependencies.outcome == 'success'
+              if: (success() || failure()) && steps.dependencies.outcome == 'success' && ${{ inputs.run_psscript_analyzer_linter }}
               run: |
                   Import-Module ./linters-ps1/Linters.psd1
                   Test-CodeUsingPSScriptAnalyzer -Verbose
 
-            - name: Run clang-tidy and clang-format
-              if: (success() || failure()) && steps.dependencies.outcome == 'success'
+            - name: Run clang tools
+              if: (success() || failure()) && steps.dependencies.outcome == 'success' && ${{ inputs.run_clang_tools_linter }}
               shell: bash
               run: |
-                  # Install the latest version of clang-tidy and clang-format for each os
+                  # Install the ninja and the latest version of clang-tidy and clang-format
                   if [ ${{ matrix.os }} = macos-latest ]
                   then
+                      brew install ninja
                       brew install llvm
                       # Override pre-installed clang by adding to the path
                       export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
@@ -81,6 +115,8 @@ jobs:
 
                   if [ ${{ matrix.os }} = ubuntu-latest ]
                   then
+                      sudo apt-get install ninja-build
+
                       # Install brew to get latest llvm and clang tools
                       test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
                       test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
@@ -92,7 +128,11 @@ jobs:
 
                   if [ ${{ matrix.os }} = windows-latest ]
                   then
+                      choco install ninja -y
                       choco upgrade llvm -y
                   fi
 
-                  pwsh -command "Import-Module ./linters-ps1/Linters.psd1; Test-CodeUsingClang -Verbose"
+                  # Configure CMake to create the 'compile_commands.json' file
+                  cmake -S . -B ./build -G "Ninja"
+
+                  pwsh -command "Import-Module ./linters-ps1/Linters.psd1; Test-CodeUsingClangTools -Verbose"

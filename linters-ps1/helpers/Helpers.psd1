@@ -8,7 +8,7 @@
     FunctionsToExport = @(
         "Assert-ExternalCommandError",
         "Test-CodeUsingAllLinters",
-        "Test-CodeUsingClang",
+        "Test-CodeUsingClangTools",
         "Test-CodeUsingCSpell",
         "Test-CodeUsingPrettier",
         "Test-CodeUsingPSScriptAnalyzer",

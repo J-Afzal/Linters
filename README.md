@@ -36,6 +36,8 @@ Add azure pipeline templates (and add to other repos)
 
 Only install if C++ files found.
 
+Add CD pipeline
+
 Other Languages:
     Lua
     Go
