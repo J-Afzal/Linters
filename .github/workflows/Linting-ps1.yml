@@ -101,7 +101,7 @@ jobs:
             #       Test-CodeUsingPSScriptAnalyzer -Verbose
 
             - name: Run clang tools
-              if: 1 == 0
+              if: false == true
               shell: bash
               run: |
                   # Install the ninja and the latest version of clang-tidy and clang-format
