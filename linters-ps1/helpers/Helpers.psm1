@@ -935,7 +935,7 @@ function Test-GitAttributesFile {
     Write-Verbose "##[debug]Finished retrieving the contents .gitattributes."
 
     Write-Output "##[section]Retrieving all unique file extensions and unique files without a file extension..."
-    $gitTrackedFiles = git ls-files -c | Split-Path -Leaf
+    $gitTrackedFiles = git ls-files -c | ForEach-Object { if (-Not $_.StartsWith("submodules")) { $_ } } | Split-Path -Leaf # Exclude submodules
 
     $uniqueGitTrackedFileExtensions = $gitTrackedFiles | ForEach-Object { if ($_.Split(".").Length -gt 1) { "\.$($_.Split(".")[-1])" } } | Sort-Object | Select-Object -Unique
     $uniqueGitTrackedFileNamesWithoutExtensions = $gitTrackedFiles | ForEach-Object { if ($_.Split(".").Length -eq 1) { $_ } } | Sort-Object | Select-Object -Unique
