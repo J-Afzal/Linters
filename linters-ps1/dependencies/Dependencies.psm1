@@ -16,7 +16,7 @@ $ErrorActionPreference = "Stop"
 
     .EXAMPLE
     Import-Module ./linters-ps1/Linters.psd1
-    Install-LintingDependencies -Verbose
+    Install-LintingDependencies -PathToLintersSubmodulesRoot "." -Verbose
 #>
 
 function Install-LintingDependencies {
@@ -31,7 +31,7 @@ function Install-LintingDependencies {
 
     Write-Output "##[section]Running Install-LintingDependencies..."
     Write-Verbose "##[debug]Parameters:"
-    Write-Verbose "##[debug]    Platform: $Platform"
+    Write-Verbose "##[debug]    PathToLintersSubmodulesRoot: $PathToLintersSubmodulesRoot"
 
     Write-Output "##[section]Installing npm dependencies..."
 
