@@ -340,7 +340,7 @@ function Test-CodeUsingClangTools {
     (
         [Parameter(Position=0, Mandatory=$true)]
         [string]
-        $PathToLintersSubmodulesRoot
+        $PathToLintersSubmodulesRoot,
 
         [Parameter(Position=1, Mandatory=$false)]
         [switch]
