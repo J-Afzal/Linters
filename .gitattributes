@@ -6,7 +6,6 @@
 .clang-tidy     text
 .gitattributes  text
 .gitignore      text
-.prettierignore text
 
 # Documents
 *.md            text        diff=markdown

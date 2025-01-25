@@ -61,7 +61,7 @@ jobs:
               id: dependencies
               run: |
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1
-                  Install-LintingDependencies -Platform "${{ matrix.os }}" -Verbose
+                  Install-LintingDependencies -PathToLintersSubmodulesRoot "${{ inputs.path_to_linters_submodule_root }}" -Verbose
 
             - name: Run gitignore linter
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_gitignore_linter
@@ -81,12 +81,6 @@ jobs:
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1
                   Test-CSpellConfigurationFile -Verbose
 
-            - name: Run prettierignore linter
-              if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_prettier_ignore_linter
-              run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1
-                  Test-PrettierIgnoreFile -Verbose
-
             - name: Run cspell
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cspell_linter
               run: |
@@ -97,13 +91,13 @@ jobs:
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_prettier_linter
               run: |
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1
-                  Test-CodeUsingPrettier -Verbose
+                  Test-CodeUsingPrettier -PathToLintersSubmodulesRoot "${{ inputs.path_to_linters_submodule_root }}" -Verbose
 
             - name: Run PSScriptAnalyzer
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_psscript_analyzer_linter
               run: |
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1
-                  Test-CodeUsingPSScriptAnalyzer -Verbose
+                  Test-CodeUsingPSScriptAnalyzer -PathToLintersSubmodulesRoot "${{ inputs.path_to_linters_submodule_root }}" -Verbose
 
             - name: Run clang tools
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_clang_tools_linter
@@ -140,4 +134,5 @@ jobs:
                   # Configure CMake to create the 'compile_commands.json' file
                   cmake -S . -B ./build -G "Ninja"
 
-                  pwsh -command "Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1; Test-CodeUsingClangTools -Verbose"
+                  pwsh -command "Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1"
+                  pwsh -command "Test-CodeUsingClangTools -PathToLintersSubmodulesRoot '${{ inputs.path_to_linters_submodule_root }}' -Verbose"
