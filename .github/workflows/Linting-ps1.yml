@@ -135,7 +135,7 @@ jobs:
                 #       choco upgrade llvm -y
                 #   fi
 
-                #   # Configure CMake to create the 'compile_commands.json' file
+                  # Configure CMake to create the 'compile_commands.json' file
                   cmake -S . -B ./build -G 'Ninja'
 
                 #   pwsh -command 'Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1'
