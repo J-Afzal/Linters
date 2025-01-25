@@ -106,7 +106,7 @@ jobs:
             #   if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_clang_tools_linter
               shell: bash
               run: |
-                cmake --version
+                cmake -S . -B ./build -G "Ninja"
                 #   # Install the ninja and the latest version of clang-tidy and clang-format
                 #   if [ ${{ matrix.os }} = macos-latest ]
                 #   then
