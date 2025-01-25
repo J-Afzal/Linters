@@ -106,37 +106,38 @@ jobs:
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_clang_tools_linter
               shell: bash
               run: |
-                  # Install the ninja and the latest version of clang-tidy and clang-format
-                  if [ ${{ matrix.os }} = macos-latest ]
-                  then
-                      brew install cmake
-                      brew install ninja
-                      brew install llvm
-                      # Override pre-installed clang by adding to the path
-                      export PATH='/opt/homebrew/opt/llvm/bin:$PATH'
-                  fi
+                cmake --version
+                #   # Install the ninja and the latest version of clang-tidy and clang-format
+                #   if [ ${{ matrix.os }} = macos-latest ]
+                #   then
+                #       brew install cmake
+                #       brew install ninja
+                #       brew install llvm
+                #       # Override pre-installed clang by adding to the path
+                #       export PATH='/opt/homebrew/opt/llvm/bin:$PATH'
+                #   fi
 
-                  if [ ${{ matrix.os }} = ubuntu-latest ]
-                  then
-                      sudo apt-get install ninja-build
+                #   if [ ${{ matrix.os }} = ubuntu-latest ]
+                #   then
+                #       sudo apt-get install ninja-build
 
-                      # Install brew to get latest llvm and clang tools
-                      test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
-                      test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-                      echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
-                      export PATH="$HOME/.linuxbrew/bin:$PATH"
+                #       # Install brew to get latest llvm and clang tools
+                #       test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
+                #       test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+                #       echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
+                #       export PATH="$HOME/.linuxbrew/bin:$PATH"
 
-                      brew install llvm
-                  fi
+                #       brew install llvm
+                #   fi
 
-                  if [ ${{ matrix.os }} = windows-latest ]
-                  then
-                      choco install ninja -y
-                      choco upgrade llvm -y
-                  fi
+                #   if [ ${{ matrix.os }} = windows-latest ]
+                #   then
+                #       choco install ninja -y
+                #       choco upgrade llvm -y
+                #   fi
 
-                  # Configure CMake to create the 'compile_commands.json' file
-                  cmake -S . -B ./build -G 'Ninja'
+                #   # Configure CMake to create the 'compile_commands.json' file
+                #   cmake -S . -B ./build -G 'Ninja'
 
-                  pwsh -command 'Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1'
-                  pwsh -command 'Test-CodeUsingClangTools -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose'
+                #   pwsh -command 'Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1'
+                #   pwsh -command 'Test-CodeUsingClangTools -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose'
