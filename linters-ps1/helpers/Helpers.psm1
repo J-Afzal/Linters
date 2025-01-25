@@ -454,7 +454,7 @@ function Test-CodeUsingClangTools {
 
     .EXAMPLE
     Import-Module ./linters-ps1/Linters.psd1
-    Test-CodeUsingCSpell -PathToLintersSubmodulesRoot "." -Verbose
+    Test-CodeUsingCSpell -PathToLintersSubmodulesRoot "." -PathBackToRepositoryRoot "." -Verbose
 #>
 
 function Test-CodeUsingCSpell {
@@ -464,7 +464,11 @@ function Test-CodeUsingCSpell {
     (
         [Parameter(Position=0, Mandatory=$true)]
         [string]
-        $PathToLintersSubmodulesRoot
+        $PathToLintersSubmodulesRoot,
+
+        [Parameter(Position=1, Mandatory=$true)]
+        [string]
+        $PathBackToRepositoryRoot
     )
 
     Write-Output "##[section]Running Test-CodeUsingCSpell..."
@@ -490,7 +494,7 @@ function Test-CodeUsingCSpell {
 
         Write-Output "##[section]Running cspell against '$file'..."
 
-        (npx -c "cspell $file --config ../../cspell.yml --unique --show-context --no-progress --no-summary ") | ForEach-Object { "##[debug]$_" } | Write-Output
+        (npx -c "cspell $file --config $PathBackToRepositoryRoot/cspell.yml --unique --show-context --no-progress --no-summary ") | ForEach-Object { "##[debug]$_" } | Write-Output
 
         if (Assert-ExternalCommandError) {
             $filesWithErrors += $file
