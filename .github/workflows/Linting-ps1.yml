@@ -106,7 +106,6 @@ jobs:
             #   if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_clang_tools_linter
               shell: bash
               run: |
-                cmake -S . -B ./build -G 'Ninja'
                 #   # Install the ninja and the latest version of clang-tidy and clang-format
                 #   if [ ${{ matrix.os }} = macos-latest ]
                 #   then
@@ -137,7 +136,7 @@ jobs:
                 #   fi
 
                 #   # Configure CMake to create the 'compile_commands.json' file
-                #   cmake -S . -B ./build -G 'Ninja'
+                  cmake -S . -B ./build -G 'Ninja'
 
                 #   pwsh -command 'Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1'
                 #   pwsh -command 'Test-CodeUsingClangTools -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose'
