@@ -549,7 +549,7 @@ function Test-CodeUsingPrettier {
 
         Write-Output "##[section]Running prettier against '$file'..."
 
-        (npx -c "prettier $file --config $PathToSubmodulesRoot/.prettierrc.yml --debug-check") | ForEach-Object { "##[debug]$_" } | Write-Verbose
+        (npx -c "prettier $file --config $PathToLintersSubmodulesRoot/.prettierrc.yml --debug-check") | ForEach-Object { "##[debug]$_" } | Write-Verbose
 
         if (Assert-ExternalCommandError) {
             $filesWithErrors += $file
