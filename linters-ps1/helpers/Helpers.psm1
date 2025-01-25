@@ -340,7 +340,7 @@ function Test-CodeUsingClangTools {
     (
         [Parameter(Position=0, Mandatory=$true)]
         [string]
-        $PathToLintersSubmodulesRoot,
+        $PathToLintersSubmodulesRoot
 
         [Parameter(Position=1, Mandatory=$false)]
         [switch]
@@ -474,6 +474,7 @@ function Test-CodeUsingCSpell {
     Write-Output "##[section]Running Test-CodeUsingCSpell..."
     Write-Verbose "##[debug]Parameters:"
     Write-Verbose "##[debug]    PathToLintersSubmodulesRoot: $PathToLintersSubmodulesRoot"
+    Write-Verbose "##[debug]    PathBackToRepositoryRoot: $PathBackToRepositoryRoot"
 
     Write-Output "##[debug]Using the following cspell version..."
     (npx cspell --version) | ForEach-Object { "##[debug]$_" } | Write-Output
@@ -494,7 +495,7 @@ function Test-CodeUsingCSpell {
 
         Write-Output "##[section]Running cspell against '$file'..."
 
-        (npx -c "cspell $file --config $PathBackToRepositoryRoot/cspell.yml --unique --show-context --no-progress --no-summary ") | ForEach-Object { "##[debug]$_" } | Write-Output
+        (npx -c "cspell $PathBackToRepositoryRoot/$file --config $PathBackToRepositoryRoot/cspell.yml --unique --show-context --no-progress --no-summary") | ForEach-Object { "##[debug]$_" } | Write-Output
 
         if (Assert-ExternalCommandError) {
             $filesWithErrors += $file
@@ -527,7 +528,7 @@ function Test-CodeUsingCSpell {
 
     .EXAMPLE
     Import-Module ./linters-ps1/Linters.psd1
-    Test-CodeUsingPrettier -PathToLintersSubmodulesRoot "." -Verbose
+    Test-CodeUsingPrettier -PathToLintersSubmodulesRoot "." -PathBackToRepositoryRoot "." -Verbose
 #>
 
 function Test-CodeUsingPrettier {
@@ -537,12 +538,17 @@ function Test-CodeUsingPrettier {
     (
         [Parameter(Position=0, Mandatory=$true)]
         [string]
-        $PathToLintersSubmodulesRoot
+        $PathToLintersSubmodulesRoot,
+
+        [Parameter(Position=1, Mandatory=$true)]
+        [string]
+        $PathBackToRepositoryRoot
     )
 
     Write-Output "##[section]Running Test-CodeUsingPrettier..."
     Write-Verbose "##[debug]Parameters:"
     Write-Verbose "##[debug]    PathToLintersSubmodulesRoot: $PathToLintersSubmodulesRoot"
+    Write-Verbose "##[debug]    PathBackToRepositoryRoot: $PathBackToRepositoryRoot"
 
     Write-Verbose "##[debug]Using the following prettier version..."
     (npx prettier --version) | ForEach-Object { "##[debug]$_" } | Write-Verbose
@@ -563,7 +569,7 @@ function Test-CodeUsingPrettier {
 
         Write-Output "##[section]Running prettier against '$file'..."
 
-        (npx -c "prettier $file --debug-check") | ForEach-Object { "##[debug]$_" } | Write-Verbose
+        (npx -c "prettier $PathBackToRepositoryRoot/$file --debug-check") | ForEach-Object { "##[debug]$_" } | Write-Verbose
 
         if (Assert-ExternalCommandError) {
             $filesWithErrors += $file
