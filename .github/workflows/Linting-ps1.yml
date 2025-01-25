@@ -94,7 +94,7 @@ jobs:
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_prettier_linter
               run: |
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1
-                  Test-CodeUsingPrettier -PathToLintersSubmodulesRoot '${{ inputs.path_to_linters_submodule_root }}' -Verbose
+                  Test-CodeUsingPrettier -PathToLintersSubmodulesRoot '${{ inputs.path_to_linters_submodule_root }}' -PathBackToRepositoryRoot '${{ inputs.path_back_to_repository_root }}' -Verbose
 
             - name: Run PSScriptAnalyzer
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_psscript_analyzer_linter
