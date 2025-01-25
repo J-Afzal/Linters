@@ -109,7 +109,6 @@ jobs:
                 #   # Install the ninja and the latest version of clang-tidy and clang-format
                 #   if [ ${{ matrix.os }} = macos-latest ]
                 #   then
-                #       brew install cmake
                 #       brew install ninja
                 #       brew install llvm
                 #       # Override pre-installed clang by adding to the path
