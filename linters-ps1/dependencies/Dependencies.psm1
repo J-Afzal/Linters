@@ -15,18 +15,18 @@ $ErrorActionPreference = "Stop"
     None.
 
     .EXAMPLE
-    Import-Module ./modules/TerminalGames.psd1
-    Install-LintingDependencies -Platform "macos-latest" -Verbose
+    Import-Module ./linters-ps1/Linters.psd1
+    Install-LintingDependencies -Verbose
 #>
 
 function Install-LintingDependencies {
 
     [CmdletBinding()]
-    param(
-        [Parameter(Position=0, Mandatory=$false)]
-        [ValidateSet("macos-latest", "ubuntu-latest", "windows-latest")]
+    param
+    (
+        [Parameter(Position=0, Mandatory=$true)]
         [string]
-        $Platform
+        $PathToLintersSubmodulesRoot
     )
 
     Write-Output "##[section]Running Install-LintingDependencies..."
@@ -37,7 +37,7 @@ function Install-LintingDependencies {
 
     npm install
 
-    Assert-ExternalCommandError -ThrowError -Verbose
+    Assert-ExternalCommandError -ThrowError
 
     Write-Verbose "##[debug]Finished installing npm dependencies."
 

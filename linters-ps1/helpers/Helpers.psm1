@@ -14,7 +14,7 @@ $ErrorActionPreference = "Stop"
     None.
 
     .EXAMPLE
-    Import-Module ./modules/TerminalGames.psd1
+    Import-Module ./linters-ps1/Linters.psd1
     npm install
     Assert-ExternalCommandError -ThrowError -Verbose
 #>
@@ -63,7 +63,7 @@ function Assert-ExternalCommandError {
 
 
     .EXAMPLE
-    Import-Module ./modules/TerminalGames.psd1
+    Import-Module ./linters-ps1/Linters.psd1
     Get-AllFilePathsToTest -Verbose
 #>
 
@@ -103,7 +103,7 @@ function Get-AllFilePathsToTest {
     system.object[] A list of file paths (relative to the root of the repository).
 
     .EXAMPLE
-    Import-Module ./modules/TerminalGames.psd1
+    Import-Module ./linters-ps1/Linters.psd1
     Get-FilteredFilePathsToTest -FileExtensionFilter "Include" -FileExtensions @("json", "md", "yml") -FileNameFilter "Exclude" -FileNames @("package-lock") -Verbose
 #>
 
@@ -190,7 +190,7 @@ function Get-FilteredFilePathsToTest {
     system.object[] A list of error messages.
 
     .EXAMPLE
-    Import-Module ./modules/TerminalGames.psd1
+    Import-Module ./linters-ps1/Linters.psd1
 
     $arrayOne = @(1,2,3)
     $arrayTwo = @(1,3,2)
@@ -257,7 +257,7 @@ function Compare-ObjectExact {
     Runs all linting checks found in the continuos integration workflow.
 
     .DESCRIPTION
-    Intended to be used during development to manually check for linting issues before pushing a commit.
+    Intended to be used locally during development to manually check for linting issues before pushing a commit.
     Raises an error at the first occurrence of a linting error.
 
     .INPUTS
@@ -270,7 +270,7 @@ function Compare-ObjectExact {
     None.
 
     .EXAMPLE
-    Import-Module ./modules/TerminalGames.psd1
+    Import-Module ./linters-ps1/Linters.psd1
     Test-CodeUsingAllLinting -FixClangTidyErrors -FixClangFormatErrors -Verbose
 #>
 
@@ -329,8 +329,8 @@ function Test-CodeUsingAllLinters {
     None.
 
     .EXAMPLE
-    Import-Module ./modules/TerminalGames.psd1
-    Test-CodeUsingClangTools -FixClangTidyErrors -FixClangFormatErrors -Verbose
+    Import-Module ./linters-ps1/Linters.psd1
+    Test-CodeUsingClangTools -PathToLintersSubmodulesRoot "." -FixClangTidyErrors -FixClangFormatErrors -Verbose
 #>
 
 function Test-CodeUsingClangTools {
@@ -338,17 +338,22 @@ function Test-CodeUsingClangTools {
     [CmdletBinding()]
     param
     (
-        [Parameter(Position=0, Mandatory=$false)]
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]
+        $PathToLintersSubmodulesRoot,
+
+        [Parameter(Position=1, Mandatory=$false)]
         [switch]
         $FixClangTidyErrors,
 
-        [Parameter(Position=1, Mandatory=$false)]
+        [Parameter(Position=2, Mandatory=$false)]
         [switch]
         $FixClangFormatErrors
     )
 
     Write-Output "##[section]Running Test-CodeUsingClangTools..."
     Write-Verbose "##[debug]Parameters:"
+    Write-Verbose "##[debug]    PathToLintersSubmodulesRoot: $PathToLintersSubmodulesRoot"
     Write-Verbose "##[debug]    FixClangTidyErrors: $FixClangTidyErrors"
     Write-Verbose "##[debug]    FixClangFormatErrors: $FixClangFormatErrors"
 
@@ -362,7 +367,7 @@ function Test-CodeUsingClangTools {
     $filesToTest = Get-FilteredFilePathsToTest -FileExtensionFilter "Include" -FileExtensions @("cpp", "hpp") -Verbose
 
     if ($null -eq $filesToTest) {
-        Write-Output "##[warning]No C++ files found to lint! Please check if this is expected!"
+        Write-Output "##[warning]No files found to lint for clang tools! Please check if this is expected!"
         return
     }
 
@@ -373,13 +378,13 @@ function Test-CodeUsingClangTools {
         $ErrorActionPreference = "Continue"
 
         Write-Output "##[section]Running clang-tidy against '$file'..."
-        (clang-tidy $file -p ./build 2>&1) | ForEach-Object { "##[debug]$_" } | Write-Verbose
+        (clang-tidy --config-file "$PathToLintersSubmodulesRoot/.clang-tidy" $file -p ./build 2>&1) | ForEach-Object { "##[debug]$_" } | Write-Verbose
 
         if (Assert-ExternalCommandError) {
 
             if ($FixClangTidyErrors) {
                 Write-Verbose "##[debug]Fixing clang-tidy issues in '$file'..."
-                (clang-tidy --fix $file -p ./build 2>&1) | ForEach-Object { "##[debug]$_" } | Write-Verbose
+                (clang-tidy --config-file "$PathToLintersSubmodulesRoot/.clang-tidy" --fix $file -p ./build 2>&1) | ForEach-Object { "##[debug]$_" } | Write-Verbose
 
                 if (Assert-ExternalCommandError) {
                     Write-Verbose "##[debug]clang-tidy issues still exist in '$file'..."
@@ -397,13 +402,13 @@ function Test-CodeUsingClangTools {
         }
 
         Write-Output "##[section]Running clang-format against '$file'..."
-        (clang-format --Werror --dry-run $file 2>&1) | ForEach-Object { "##[debug]$_" } | Write-Verbose
+        (clang-format --style=file:$PathToLintersSubmodulesRoot/.clang-format --Werror --dry-run $file 2>&1) | ForEach-Object { "##[debug]$_" } | Write-Verbose
 
         if (Assert-ExternalCommandError) {
 
             if ($FixClangFormatErrors) {
                 Write-Verbose "##[debug]Fixing clang-format issues in '$file'..."
-                (clang-format --Werror --i $file 2>&1) | ForEach-Object { "##[debug]$_" } | Write-Verbose
+                (clang-format --style=file:$PathToLintersSubmodulesRoot/.clang-format --Werror --i $file 2>&1) | ForEach-Object { "##[debug]$_" } | Write-Verbose
 
                 if (Assert-ExternalCommandError) {
                     Write-Verbose "##[debug]clang-format issues still exist in '$file'..."
@@ -448,14 +453,15 @@ function Test-CodeUsingClangTools {
     None.
 
     .EXAMPLE
-    Import-Module ./modules/TerminalGames.psd1
+    Import-Module ./linters-ps1/Linters.psd1
     Test-CodeUsingCSpell -Verbose
 #>
 
 function Test-CodeUsingCSpell {
 
     [CmdletBinding()]
-    param()
+    param
+    ()
 
     Write-Output "##[section]Running Test-CodeUsingCSpell..."
 
@@ -465,13 +471,18 @@ function Test-CodeUsingCSpell {
     Write-Output "##[section]Retrieving all files to test against cspell..."
     $filesToTest = Get-FilteredFilePathsToTest -FileExtensionFilter "Exclude" -FileExtensions @("ico", "png") -FileNameFilter "Exclude" @("package-lock") -Verbose
 
+    if ($null -eq $filesToTest) {
+        Write-Output "##[warning]No files found to lint for cspell! Please check if this is expected!"
+        return
+    }
+
     $filesWithErrors = @()
 
     foreach ($file in $filesToTest) {
 
         Write-Output "##[section]Running cspell against '$file'..."
 
-        (npx -c "cspell --unique --show-context --no-progress --no-summary $file") | ForEach-Object { "##[debug]$_" } | Write-Output
+        (npx -c "cspell $file --unique --show-context --no-progress --no-summary ") | ForEach-Object { "##[debug]$_" } | Write-Output
 
         if (Assert-ExternalCommandError) {
             $filesWithErrors += $file
@@ -503,16 +514,23 @@ function Test-CodeUsingCSpell {
     None.
 
     .EXAMPLE
-    Import-Module ./modules/TerminalGames.psd1
-    Test-CodeUsingPrettier -Verbose
+    Import-Module ./linters-ps1/Linters.psd1
+    Test-CodeUsingPrettier -PathToLintersSubmodulesRoot "." -Verbose
 #>
 
 function Test-CodeUsingPrettier {
 
     [CmdletBinding()]
-    param()
+    param
+    (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]
+        $PathToLintersSubmodulesRoot
+    )
 
     Write-Output "##[section]Running Test-CodeUsingPrettier..."
+    Write-Verbose "##[debug]Parameters:"
+    Write-Verbose "##[debug]    PathToLintersSubmodulesRoot: $PathToLintersSubmodulesRoot"
 
     Write-Verbose "##[debug]Using the following prettier version..."
     (npx prettier --version) | ForEach-Object { "##[debug]$_" } | Write-Verbose
@@ -520,13 +538,18 @@ function Test-CodeUsingPrettier {
     Write-Output "##[section]Retrieving all files to test against prettier..."
     $filesToTest = Get-FilteredFilePathsToTest -FileExtensionFilter "Include" -FileExtensions @("clang-format", "clang-tidy", "json", "md", "yml") -FileNameFilter "Exclude" @("package-lock") -Verbose
 
+    if ($null -eq $filesToTest) {
+        Write-Output "##[warning]No files found to lint for prettier! Please check if this is expected!"
+        return
+    }
+
     $filesWithErrors = @()
 
     foreach ($file in $filesToTest) {
 
         Write-Output "##[section]Running prettier against '$file'..."
 
-        (npx -c "prettier $file --debug-check") | ForEach-Object { "##[debug]$_" } | Write-Verbose
+        (npx -c "prettier $file --config $PathToSubmodulesRoot/.prettierrc.yml --debug-check") | ForEach-Object { "##[debug]$_" } | Write-Verbose
 
         if (Assert-ExternalCommandError) {
             $filesWithErrors += $file
@@ -558,19 +581,31 @@ function Test-CodeUsingPrettier {
     None.
 
     .EXAMPLE
-    Import-Module ./modules/TerminalGames.psd1
-    Test-CodeUsingPSScriptAnalyzer -Verbose
+    Import-Module ./linters-ps1/Linters.psd1
+    Test-CodeUsingPSScriptAnalyzer -PathToLintersSubmodulesRoot "." -Verbose
 #>
 
 function Test-CodeUsingPSScriptAnalyzer {
 
     [CmdletBinding()]
-    param()
+    param
+    (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]
+        $PathToLintersSubmodulesRoot
+    )
 
     Write-Output "##[section]Running Test-CodeUsingPSScriptAnalyzer..."
+    Write-Verbose "##[debug]Parameters:"
+    Write-Verbose "##[debug]    PathToLintersSubmodulesRoot: $PathToLintersSubmodulesRoot"
 
     Write-Output "##[section]Retrieving all files to test against PSScriptAnalyzer..."
     $filesToTest = Get-FilteredFilePathsToTest -FileExtensionFilter "Include" -FileExtensions @("ps1", "psd1", "psm1") -Verbose
+
+    if ($null -eq $filesToTest) {
+        Write-Output "##[warning]No files found to lint for PSScriptAnalyzer! Please check if this is expected!"
+        return
+    }
 
     $filesWithErrors = @()
 
@@ -578,8 +613,8 @@ function Test-CodeUsingPSScriptAnalyzer {
 
         Write-Output "##[section]Running PSScriptAnalyzer against '$file'..."
 
-        Invoke-ScriptAnalyzer -Path $file -Settings ./PSScriptAnalyzerSettings.psd1
-        $output = Invoke-ScriptAnalyzer -Path $file -Settings ./PSScriptAnalyzerSettings.psd1
+        Invoke-ScriptAnalyzer -Path $file -Settings "$PathToLintersSubmodulesRoot/PSScriptAnalyzerSettings.psd1"
+        $output = Invoke-ScriptAnalyzer -Path $file -Settings "$PathToLintersSubmodulesRoot/PSScriptAnalyzerSettings.psd1"
 
         if ($output.Length -gt 0) {
             $filesWithErrors += $file
@@ -623,7 +658,7 @@ function Test-CodeUsingPSScriptAnalyzer {
     None.
 
     .EXAMPLE
-    Import-Module ./modules/TerminalGames.psd1
+    Import-Module ./linters-ps1/Linters.psd1
     Test-CSpellConfigurationFile -Verbose
 #>
 
@@ -919,7 +954,7 @@ function Test-CSpellConfigurationFile {
     None.
 
     .EXAMPLE
-    Import-Module ./modules/TerminalGames.psd1
+    Import-Module ./linters-ps1/Linters.psd1
     Test-GitattributesFile -Verbose
 #>
 
@@ -1098,7 +1133,7 @@ function Test-GitAttributesFile {
     None.
 
     .EXAMPLE
-    Import-Module ./modules/TerminalGames.psd1
+    Import-Module ./linters-ps1/Linters.psd1
     Test-GitIgnoreFile -Verbose
 #>
 
@@ -1207,51 +1242,6 @@ function Test-GitIgnoreFile {
     None.
 
     .EXAMPLE
-    Import-Module ./modules/TerminalGames.psd1
-    Test-PrettierIgnoreFile -Verbose
+    Import-Module ./linters-ps1/Linters.psd1
+    Test-PrettierIgnoreFile -PathToRepositoryRoot "path/to/repository/root/" -Verbose
 #>
-
-function Test-PrettierIgnoreFile {
-
-    [CmdletBinding()]
-    param()
-
-    Write-Output "##[section]Running Test-PrettierIgnoreFile..."
-
-    Write-Output "##[section]Retrieving contents of .prettierignore..."
-    $prettierIgnoreFileContents = @(Get-Content -Path ./.prettierignore)
-    Write-Verbose "##[debug]Finished retrieving the contents .prettierignore."
-
-    Write-Output "##[section]Retrieving contents of .gitignore..."
-    if (-Not (Test-Path -Path "./.gitignore")) {
-        Write-Output "##[debug]No gitignore file found at current directory!"
-        $gitignoreFileContents = @()
-    }
-
-    else {
-        $gitignoreFileContents = @(Get-Content -Path ./.gitignore)
-    }
-    Write-Verbose "##[debug]Finished retrieving the contents .gitignore."
-
-    Write-Output "##[section]Checking that .prettierignore matches .gitignore exactly..."
-    $lintingErrors = @()
-
-    # package-lock.json is the only exception.
-    $gitignoreFileContents += "package-lock.json"
-    $gitignoreFileContents = $gitignoreFileContents | Sort-Object
-
-    if (Compare-ObjectExact -ReferenceObject $gitignoreFileContents -DifferenceObject $prettierIgnoreFileContents -Verbose) {
-        $lintingErrors += @{lineNumber = "-"; line = "-"; errorMessage = ".prettierignore does not match .gitignore" }
-    }
-
-    Write-Verbose "##[debug]Finished checking that .prettierignore matches .gitignore exactly."
-
-    if ($lintingErrors.Length -gt 0) {
-        $lintingErrors | Sort-Object { $_.lineNumber }, { $_.errorMessage } | ForEach-Object { [PSCustomObject]$_ } | Format-Table -AutoSize -Wrap -Property lineNumber, line, errorMessage
-        Write-Error "##[error]Please resolve the above errors!"
-    }
-
-    else {
-        Write-Output "##[section]All .prettierignore tests passed!"
-    }
-}
