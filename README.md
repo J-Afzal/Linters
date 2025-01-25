@@ -32,6 +32,8 @@ TODO
 
 Check Test-CodeUsingAllLinters works as expected
 
+Testing pipeline for submodule use-case
+
 Add ## Getting Started and ## General Information
 
 Add azure pipeline templates (and add to other repos)
