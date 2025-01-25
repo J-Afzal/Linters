@@ -33,6 +33,8 @@ function Install-LintingDependencies {
     Write-Verbose "##[debug]Parameters:"
     Write-Verbose "##[debug]    PathToLintersSubmodulesRoot: $PathToLintersSubmodulesRoot"
 
+    Set-Location -Path $PathToLintersSubmodulesRoot
+
     Write-Output "##[section]Installing npm dependencies..."
 
     npm install

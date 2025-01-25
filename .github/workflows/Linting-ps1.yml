@@ -85,7 +85,7 @@ jobs:
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cspell_linter
               run: |
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1
-                  Test-CodeUsingCSpell -Verbose
+                  Test-CodeUsingCSpell -PathToLintersSubmodulesRoot "${{ inputs.path_to_linters_submodule_root }}" -Verbose
 
             - name: Run prettier
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_prettier_linter

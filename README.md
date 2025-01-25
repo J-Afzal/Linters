@@ -30,11 +30,13 @@ configuring CMake for the clang-based linters).
 <!--
 TODO
 
+Check Test-CodeUsingAllLinters works as expected
+
 Add ## Getting Started and ## General Information
 
 Add azure pipeline templates (and add to other repos)
 
-Add CD pipeline
+Add CD pipeline (releases)
 
 Other Languages:
     Lua

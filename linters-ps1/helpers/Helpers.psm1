@@ -454,16 +454,22 @@ function Test-CodeUsingClangTools {
 
     .EXAMPLE
     Import-Module ./linters-ps1/Linters.psd1
-    Test-CodeUsingCSpell -Verbose
+    Test-CodeUsingCSpell -PathToLintersSubmodulesRoot "." -Verbose
 #>
 
 function Test-CodeUsingCSpell {
 
     [CmdletBinding()]
     param
-    ()
+    (
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]
+        $PathToLintersSubmodulesRoot
+    )
 
     Write-Output "##[section]Running Test-CodeUsingCSpell..."
+    Write-Verbose "##[debug]Parameters:"
+    Write-Verbose "##[debug]    PathToLintersSubmodulesRoot: $PathToLintersSubmodulesRoot"
 
     Write-Output "##[debug]Using the following cspell version..."
     (npx cspell --version) | ForEach-Object { "##[debug]$_" } | Write-Output
@@ -476,13 +482,15 @@ function Test-CodeUsingCSpell {
         return
     }
 
+    Set-Location -Path $PathToLintersSubmodulesRoot
+
     $filesWithErrors = @()
 
     foreach ($file in $filesToTest) {
 
         Write-Output "##[section]Running cspell against '$file'..."
 
-        (npx -c "cspell $file --unique --show-context --no-progress --no-summary ") | ForEach-Object { "##[debug]$_" } | Write-Output
+        (npx -c "cspell $file --config ../../cspell.yml --unique --show-context --no-progress --no-summary ") | ForEach-Object { "##[debug]$_" } | Write-Output
 
         if (Assert-ExternalCommandError) {
             $filesWithErrors += $file
@@ -543,13 +551,15 @@ function Test-CodeUsingPrettier {
         return
     }
 
+    Set-Location -Path $PathToLintersSubmodulesRoot
+
     $filesWithErrors = @()
 
     foreach ($file in $filesToTest) {
 
         Write-Output "##[section]Running prettier against '$file'..."
 
-        (npx -c "prettier $file --config $PathToLintersSubmodulesRoot/.prettierrc.yml --debug-check") | ForEach-Object { "##[debug]$_" } | Write-Verbose
+        (npx -c "prettier $file --debug-check") | ForEach-Object { "##[debug]$_" } | Write-Verbose
 
         if (Assert-ExternalCommandError) {
             $filesWithErrors += $file
