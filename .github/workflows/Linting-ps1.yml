@@ -88,19 +88,19 @@ jobs:
             #   if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cspell_linter
             #   run: |
             #       Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1
-            #       Test-CodeUsingCSpell -PathToLintersSubmodulesRoot '${{ inputs.path_to_linters_submodule_root }}' -PathBackToRepositoryRoot '${{ inputs.path_back_to_repository_root }}' -Verbose
+            #       Test-CodeUsingCSpell -PathToLintersSubmodulesRoot "${{ inputs.path_to_linters_submodule_root }}" -PathBackToRepositoryRoot "${{ inputs.path_back_to_repository_root }}" -Verbose
 
             # - name: Run prettier
             #   if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_prettier_linter
             #   run: |
             #       Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1
-            #       Test-CodeUsingPrettier -PathToLintersSubmodulesRoot '${{ inputs.path_to_linters_submodule_root }}' -PathBackToRepositoryRoot '${{ inputs.path_back_to_repository_root }}' -Verbose
+            #       Test-CodeUsingPrettier -PathToLintersSubmodulesRoot "${{ inputs.path_to_linters_submodule_root }}" -PathBackToRepositoryRoot "${{ inputs.path_back_to_repository_root }}" -Verbose
 
             # - name: Run PSScriptAnalyzer
             #   if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_psscript_analyzer_linter
             #   run: |
             #       Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1
-            #       Test-CodeUsingPSScriptAnalyzer -PathToLintersSubmodulesRoot '${{ inputs.path_to_linters_submodule_root }}' -Verbose
+            #       Test-CodeUsingPSScriptAnalyzer -PathToLintersSubmodulesRoot "${{ inputs.path_to_linters_submodule_root }}" -Verbose
 
             - name: Run clang tools
             #   if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_clang_tools_linter
@@ -112,7 +112,7 @@ jobs:
                       brew install ninja
                       brew install llvm
                       # Override pre-installed clang by adding to the path
-                      export PATH='/opt/homebrew/opt/llvm/bin:$PATH'
+                      export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
                   fi
 
                   #   if [ ${{ matrix.os }} = ubuntu-latest ]
@@ -134,8 +134,8 @@ jobs:
                   #       choco upgrade llvm -y
                   #   fi
 
-                  # Configure CMake to create the 'compile_commands.json' file
-                  cmake -S . -B ./build -G 'Ninja'
+                  # Configure CMake to create the "compile_commands.json" file
+                  cmake -S . -B ./build -G "Ninja"
 
-                  pwsh -command 'Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1'
-                  pwsh -command 'Test-CodeUsingClangTools -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose'
+                  pwsh -command "Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1"
+                  pwsh -command "Test-CodeUsingClangTools -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose"
