@@ -1,6 +1,7 @@
 # Linters
 
-Mostly wrappers around existing linters with some custom implementations.
+Mostly wrappers around existing linters with some custom implementations. Includes a template workflow for running all the
+linters.
 
 ## CI / CD
 
@@ -28,22 +29,28 @@ opening the folder through the `Developer PowerShell for VS` (otherwise you may 
 configuring CMake for the clang-based linters).
 
 <!--
-TODO
-
-Check Test-CodeUsingAllLinters works as expected
-
-Testing pipeline for submodule use-case
-
-Add ## Getting Started and ## General Information
+TODO - Linters
 
 Add azure pipeline templates (and add to other repos)
 
-Add CD pipeline (releases)
+TODO - Terminal Games
 
-Other Languages:
-    Lua
-    Go
-    Python
-    Rust
+-----
+
+Doxygen
+    Add build to CI with artifact to check.
+    Add build and publish to CD and publish to GH pages (maybe commit to repo but make sure no infinite loop)
+    Update readme to link to GH pages docs
+
+-----
+
+zig build system???
+Performance profile code to see where performance lost in battleships
+
+------
+
+unit test all the things
+
+change master to main?
 
 -->
