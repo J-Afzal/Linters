@@ -8,7 +8,8 @@ linters.
 [![Continuous Integration](https://github.com/J-Afzal/Linters/actions/workflows/ContinuousIntegration.yml/badge.svg)](https://github.com/J-Afzal/Linters/actions/workflows/ContinuousIntegration.yml)
 [![Continuous Deployment](https://github.com/J-Afzal/Linters/actions/workflows/ContinuousDeployment.yml/badge.svg)](https://github.com/J-Afzal/Linters/actions/workflows/ContinuousDeployment.yml)
 
-The continuous integration workflow runs against all commits on pull requests, builds the code, runs unit tests and performs linting checks.
+The continuous integration workflow runs against all commits on pull requests, builds the code, runs unit tests and performs
+linting checks.
 
 The continuous deployment workflow runs against all commits to main, builds the code and deploys linter modules as a release.
 
@@ -31,11 +32,14 @@ configuring CMake for the clang-based linters).
 <!--
 TODO - Linters
 
-Add azure pipeline templates (and add to other repos)
+Add azure pipeline templates
+
+run pipelines against empty repo
+required github workflows
+
+use command more often in write-output (check if triggers work and then use in terminal games to check if template works)
 
 TODO - Terminal Games
-
------
 
 Doxygen
     Add build to CI with artifact to check.
