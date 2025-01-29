@@ -1,4 +1,5 @@
 $ErrorActionPreference = "Stop"
+$InformationPreference = "Continue"
 
 <#
     .SYNOPSIS
@@ -35,15 +36,17 @@ function Assert-ExternalCommandError {
 
     if ($LASTEXITCODE -eq 1) {
         if ($ThrowError) {
-            Write-Error "Please resolve the above errors!"
+            Write-Error "##[error]Please resolve the above errors!"
         }
 
         else {
+            Write-Verbose "##[debug]Returning: true"
             return $true
         }
     }
 
     elseif (-Not $ThrowError) {
+        Write-Verbose "##[debug]Returning: false"
         return $false
     }
 }
@@ -73,10 +76,12 @@ function Get-AllFilePathsToTest {
     [OutputType([system.object[]])]
     param()
 
+    Write-Verbose "##[debug]Running Get-AllFilePathsToTest..."
+
     $allFilesToTest = Get-FilteredFilePathsToTest -FileExtensionFilter "Exclude" -FileExtensions @("") -FileNameFilter "Exclude" -FileNames @("")
 
     Write-Verbose "##[debug]Returning:"
-    $allFilesToTest | ForEach-Object { "##[debug]    $_" } | Write-Verbose
+    $allFilesToTest | ForEach-Object { Write-Verbose "##[debug]    $_" }
 
     return $allFilesToTest
 }
@@ -139,10 +144,10 @@ function Get-FilteredFilePathsToTest {
     Write-Verbose "##[debug]Parameters:"
     Write-Verbose "##[debug]    FileExtensionFilter: $FileExtensionFilter"
     Write-Verbose "##[debug]    FileExtensions:"
-    $FileExtensions | ForEach-Object { "##[debug]        $_" } | Write-Verbose
+    $FileExtensions | ForEach-Object { Write-Verbose "##[debug]        $_" }
     Write-Verbose "##[debug]    FileNameFilter: $FileNameFilter"
     Write-Verbose "##[debug]    FileNames:"
-    $FileNames | ForEach-Object { "##[debug]        $_" } | Write-Verbose
+    $FileNames | ForEach-Object { Write-Verbose "##[debug]        $_" }
 
     if ($FileExtensionFilter -eq "Include") {
 
@@ -169,7 +174,7 @@ function Get-FilteredFilePathsToTest {
     Assert-ExternalCommandError -ThrowError
 
     Write-Verbose "##[debug]Returning:"
-    $filteredFilesToTest | ForEach-Object { "##[debug]    $_" } | Write-Verbose
+    $filteredFilesToTest | ForEach-Object { Write-Verbose "##[debug]    $_" }
 
     return $filteredFilesToTest
 }
@@ -215,9 +220,9 @@ function Compare-ObjectExact {
     Write-Verbose "##[debug]Running Compare-ObjectExact..."
     Write-Verbose "##[debug]Parameters:"
     Write-Verbose "##[debug]    ReferenceObject:"
-    $ReferenceObject | ForEach-Object { "##[debug]        $_" } | Write-Verbose
+    $ReferenceObject | ForEach-Object { Write-Verbose "##[debug]        $_" }
     Write-Verbose "##[debug]    DifferenceObject:"
-    $DifferenceObject | ForEach-Object { "##[debug]        $_" } | Write-Verbose
+    $DifferenceObject | ForEach-Object { Write-Verbose "##[debug]        $_" }
 
     [Collections.Generic.List[String]] $errors = @()
 
@@ -247,7 +252,7 @@ function Compare-ObjectExact {
     }
 
     Write-Verbose "##[debug]Returning:"
-    $errors | ForEach-Object { "##[debug]    $_" } | Write-Verbose
+    $errors | ForEach-Object { Write-Verbose "##[debug]    $_" }
 
     return $errors
 }
@@ -295,7 +300,7 @@ function Test-CodeUsingAllLinters {
         $FixClangFormatErrors
     )
 
-    Write-Output "##[section]Running Test-CodeUsingAllLinting..."
+    Write-Verbose "##[debug]Running Test-CodeUsingAllLinting..."
     Write-Verbose "##[debug]Parameters:"
     Write-Verbose "##[debug]    PathToLintersSubmodulesRoot: $PathToLintersSubmodulesRoot"
     Write-Verbose "##[debug]    PathBackToRepositoryRoot: $PathBackToRepositoryRoot"
@@ -306,7 +311,7 @@ function Test-CodeUsingAllLinters {
 
     Test-GitAttributesFile
 
-    Test-CSpellConfigurationFile
+    Test-CSpellConfiguration
 
     Test-CodeUsingCSpell -PathToLintersSubmodulesRoot $PathToLintersSubmodulesRoot -PathBackToRepositoryRoot $PathBackToRepositoryRoot
 
@@ -359,40 +364,38 @@ function Test-CodeUsingClangTools {
         $FixClangFormatErrors
     )
 
-    Write-Output "##[section]Running Test-CodeUsingClangTools..."
+    Write-Verbose "##[debug]Running Test-CodeUsingClangTools..."
     Write-Verbose "##[debug]Parameters:"
     Write-Verbose "##[debug]    PathToLintersSubmodulesRoot: $PathToLintersSubmodulesRoot"
     Write-Verbose "##[debug]    FixClangTidyErrors: $FixClangTidyErrors"
     Write-Verbose "##[debug]    FixClangFormatErrors: $FixClangFormatErrors"
 
-    Write-Output "##[section]Retrieving all files to test against clang-tidy and clang-format..."
+    Write-Information "##[command]Retrieving all files to test against clang-tidy and clang-format..."
     $filesToTest = Get-FilteredFilePathsToTest -FileExtensionFilter "Include" -FileExtensions @("cpp", "hpp")
 
     if ($null -eq $filesToTest) {
-        Write-Output "##[warning]No files found to lint for clang tools! Please check if this is expected!"
+        Write-Information "##[warning]No files found to lint for clang tools! Please check if this is expected!"
         return
     }
 
     Write-Verbose "##[debug]Using the following clang-tidy version..."
-    (clang-tidy --version) | ForEach-Object { "##[debug]$_" } | Write-Verbose
+    (clang-tidy --version) | ForEach-Object { Write-Verbose "##[debug]$_" }
 
     Write-Verbose "##[debug]Using the following clang-format version..."
-    (clang-format --version) | ForEach-Object { "##[debug]$_" } | Write-Verbose
+    (clang-format --version) | ForEach-Object { Write-Verbose "##[debug]$_" }
 
     $filesWithErrors = @()
 
     foreach ($file in $filesToTest) {
 
-        $ErrorActionPreference = "Continue"
-
-        Write-Output "##[section]Running clang-tidy against '$file'..."
-        (clang-tidy --config-file "$PathToLintersSubmodulesRoot/.clang-tidy" $file -p ./build 2>&1) | ForEach-Object { "##[debug]$_" } | Write-Verbose
+        Write-Information "##[command]Running clang-tidy against '$file'..."
+        (clang-tidy --config-file "$PathToLintersSubmodulesRoot/.clang-tidy" $file -p ./build 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
 
         if (Assert-ExternalCommandError) {
 
             if ($FixClangTidyErrors) {
                 Write-Verbose "##[debug]Fixing clang-tidy issues in '$file'..."
-                (clang-tidy --config-file "$PathToLintersSubmodulesRoot/.clang-tidy" --fix $file -p ./build 2>&1) | ForEach-Object { "##[debug]$_" } | Write-Verbose
+                (clang-tidy --config-file "$PathToLintersSubmodulesRoot/.clang-tidy" --fix $file -p ./build 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
 
                 if (Assert-ExternalCommandError) {
                     Write-Verbose "##[debug]clang-tidy issues still exist in '$file'..."
@@ -409,14 +412,14 @@ function Test-CodeUsingClangTools {
             }
         }
 
-        Write-Output "##[section]Running clang-format against '$file'..."
-        (clang-format --style=file:$PathToLintersSubmodulesRoot/.clang-format --Werror --dry-run $file 2>&1) | ForEach-Object { "##[debug]$_" } | Write-Verbose
+        Write-Information "##[command]Running clang-format against '$file'..."
+        (clang-format --style=file:$PathToLintersSubmodulesRoot/.clang-format --Werror --dry-run $file 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
 
         if (Assert-ExternalCommandError) {
 
             if ($FixClangFormatErrors) {
                 Write-Verbose "##[debug]Fixing clang-format issues in '$file'..."
-                (clang-format --style=file:$PathToLintersSubmodulesRoot/.clang-format --Werror --i $file 2>&1) | ForEach-Object { "##[debug]$_" } | Write-Verbose
+                (clang-format --style=file:$PathToLintersSubmodulesRoot/.clang-format --Werror --i $file 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
 
                 if (Assert-ExternalCommandError) {
                     Write-Verbose "##[debug]clang-format issues still exist in '$file'..."
@@ -432,14 +435,12 @@ function Test-CodeUsingClangTools {
                 $filesWithErrors += $file
             }
         }
-
-        $ErrorActionPreference = "Stop"
     }
 
     if ($filesWithErrors.Length -gt 0) {
-        $errorMessage = "##[error]The following files have clang-tidy/clang-format errors:`n"
-        $filesWithErrors | ForEach-Object { $errorMessage += "##[error]$_`n" }
-        Write-Error $errorMessage
+        Write-Information "##[error]The following files have clang-tidy/clang-format errors:"
+        $filesWithErrors | ForEach-Object { Write-Information "##[error]$_" }
+        Write-Error "##[error]Please resolve the above errors!"
     }
 
     else {
@@ -479,31 +480,31 @@ function Test-CodeUsingCSpell {
         $PathBackToRepositoryRoot
     )
 
-    Write-Output "##[section]Running Test-CodeUsingCSpell..."
+    Write-Verbose "##[debug]Running Test-CodeUsingCSpell..."
     Write-Verbose "##[debug]Parameters:"
     Write-Verbose "##[debug]    PathToLintersSubmodulesRoot: $PathToLintersSubmodulesRoot"
     Write-Verbose "##[debug]    PathBackToRepositoryRoot: $PathBackToRepositoryRoot"
 
-    Write-Output "##[section]Retrieving all files to test against cspell..."
+    Write-Information "##[command]Retrieving all files to test against cspell..."
     $filesToTest = Get-FilteredFilePathsToTest -FileExtensionFilter "Exclude" -FileExtensions @("ico", "png") -FileNameFilter "Exclude" @("package-lock")
 
     if ($null -eq $filesToTest) {
-        Write-Output "##[warning]No files found to lint for cspell! Please check if this is expected!"
+        Write-Information "##[warning]No files found to lint for cspell! Please check if this is expected!"
         return
     }
 
     Set-Location -Path $PathToLintersSubmodulesRoot
 
-    Write-Output "##[debug]Using the following cspell version..."
-    (npx cspell --version) | ForEach-Object { "##[debug]$_" } | Write-Output
+    Write-Verbose "##[debug]Using the following cspell version..."
+    (npx cspell --version) | ForEach-Object { "##[debug]$_" } | Write-Verbose
 
     $filesWithErrors = @()
 
     foreach ($file in $filesToTest) {
 
-        Write-Output "##[section]Running cspell against '$file'..."
+        Write-Information "##[command]Running cspell against '$file'..."
 
-        (npx -c "cspell $PathBackToRepositoryRoot/$file --config $PathBackToRepositoryRoot/cspell.yml --unique --show-context --no-progress --no-summary") | ForEach-Object { "##[debug]$_" } | Write-Output
+        (npx -c "cspell $PathBackToRepositoryRoot/$file --config $PathBackToRepositoryRoot/cspell.yml --unique --show-context --no-progress --no-summary") | ForEach-Object { "##[debug]$_" } | Write-Verbose
 
         if (Assert-ExternalCommandError) {
             $filesWithErrors += $file
@@ -513,9 +514,9 @@ function Test-CodeUsingCSpell {
     Set-Location -Path $PathBackToRepositoryRoot
 
     if ($filesWithErrors.Length -gt 0) {
-        $errorMessage = "##[error]The following files have cspell errors:`n"
-        $filesWithErrors | ForEach-Object { $errorMessage += "##[error]$_`n" }
-        Write-Error $errorMessage
+        Write-Information "##[error]The following files have cspell errors:"
+        $filesWithErrors | ForEach-Object { Write-Information "##[error]$_" }
+        Write-Error "##[error]Please resolve the above errors!"
     }
 
     else {
@@ -555,31 +556,31 @@ function Test-CodeUsingPrettier {
         $PathBackToRepositoryRoot
     )
 
-    Write-Output "##[section]Running Test-CodeUsingPrettier..."
+    Write-Verbose "##[debug]Running Test-CodeUsingPrettier..."
     Write-Verbose "##[debug]Parameters:"
     Write-Verbose "##[debug]    PathToLintersSubmodulesRoot: $PathToLintersSubmodulesRoot"
     Write-Verbose "##[debug]    PathBackToRepositoryRoot: $PathBackToRepositoryRoot"
 
-    Write-Output "##[section]Retrieving all files to test against prettier..."
+    Write-Information "##[command]Retrieving all files to test against prettier..."
     $filesToTest = Get-FilteredFilePathsToTest -FileExtensionFilter "Include" -FileExtensions @("clang-format", "clang-tidy", "json", "md", "yml") -FileNameFilter "Exclude" @("package-lock")
 
     if ($null -eq $filesToTest) {
-        Write-Output "##[warning]No files found to lint for prettier! Please check if this is expected!"
+        Write-Information "##[warning]No files found to lint for prettier! Please check if this is expected!"
         return
     }
 
     Set-Location -Path $PathToLintersSubmodulesRoot
 
     Write-Verbose "##[debug]Using the following prettier version..."
-    (npx prettier --version) | ForEach-Object { "##[debug]$_" } | Write-Verbose
+    (npx prettier --version) | ForEach-Object { Write-Verbose "##[debug]$_" }
 
     $filesWithErrors = @()
 
     foreach ($file in $filesToTest) {
 
-        Write-Output "##[section]Running prettier against '$file'..."
+        Write-Information "##[command]Running prettier against '$file'..."
 
-        (npx -c "prettier $PathBackToRepositoryRoot/$file --debug-check") | ForEach-Object { "##[debug]$_" } | Write-Verbose
+        (npx -c "prettier $PathBackToRepositoryRoot/$file --debug-check") | ForEach-Object { Write-Verbose "##[debug]$_" }
 
         if (Assert-ExternalCommandError) {
             $filesWithErrors += $file
@@ -589,9 +590,9 @@ function Test-CodeUsingPrettier {
     Set-Location -Path $PathBackToRepositoryRoot
 
     if ($filesWithErrors.Length -gt 0) {
-        $errorMessage = "##[error]The following files have prettier errors:`n"
-        $filesWithErrors | ForEach-Object { $errorMessage += "##[error]$_`n" }
-        Write-Error $errorMessage
+        Write-Information "##[error]The following files have prettier errors:"
+        $filesWithErrors | ForEach-Object { Write-Information "##[error]$_" }
+        Write-Error "##[error]Please resolve the above errors!"
     }
 
     else {
@@ -627,15 +628,15 @@ function Test-CodeUsingPSScriptAnalyzer {
         $PathToLintersSubmodulesRoot
     )
 
-    Write-Output "##[section]Running Test-CodeUsingPSScriptAnalyzer..."
+    Write-Verbose "##[debug]Running Test-CodeUsingPSScriptAnalyzer..."
     Write-Verbose "##[debug]Parameters:"
     Write-Verbose "##[debug]    PathToLintersSubmodulesRoot: $PathToLintersSubmodulesRoot"
 
-    Write-Output "##[section]Retrieving all files to test against PSScriptAnalyzer..."
+    Write-Information "##[command]Retrieving all files to test against PSScriptAnalyzer..."
     $filesToTest = Get-FilteredFilePathsToTest -FileExtensionFilter "Include" -FileExtensions @("ps1", "psd1", "psm1")
 
     if ($null -eq $filesToTest) {
-        Write-Output "##[warning]No files found to lint for PSScriptAnalyzer! Please check if this is expected!"
+        Write-Information "##[warning]No files found to lint for PSScriptAnalyzer! Please check if this is expected!"
         return
     }
 
@@ -643,7 +644,7 @@ function Test-CodeUsingPSScriptAnalyzer {
 
     foreach ($file in $filesToTest) {
 
-        Write-Output "##[section]Running PSScriptAnalyzer against '$file'..."
+        Write-Information "##[command]Running PSScriptAnalyzer against '$file'..."
 
         Invoke-ScriptAnalyzer -Path $file -Settings "$PathToLintersSubmodulesRoot/PSScriptAnalyzerSettings.psd1"
         $output = Invoke-ScriptAnalyzer -Path $file -Settings "$PathToLintersSubmodulesRoot/PSScriptAnalyzerSettings.psd1"
@@ -654,9 +655,9 @@ function Test-CodeUsingPSScriptAnalyzer {
     }
 
     if ($filesWithErrors.Length -gt 0) {
-        $errorMessage = "##[error]The following files have PSScriptAnalyzer errors:`n"
-        $filesWithErrors | ForEach-Object { $errorMessage += "##[error]$_`n" }
-        Write-Error $errorMessage
+        Write-Information "##[error]The following files have PSScriptAnalyzer errors:"
+        $filesWithErrors | ForEach-Object { Write-Information "##[error]$_" }
+        Write-Error "##[error]Please resolve the above errors!"
     }
 
     else {
@@ -691,21 +692,20 @@ function Test-CodeUsingPSScriptAnalyzer {
 
     .EXAMPLE
     Import-Module ./submodules/Linters/linters-ps1/Linters.psd1
-    Test-CSpellConfigurationFile -Verbose
+    Test-CSpellConfiguration -Verbose
 #>
 
-function Test-CSpellConfigurationFile {
+function Test-CSpellConfiguration {
 
     [CmdletBinding()]
     param()
 
-    Write-Output "##[section]Running Test-CSpellConfigurationFile..."
+    Write-Verbose "##[debug]Running Test-CSpellConfiguration..."
 
-    Write-Output "##[section]Retrieving contents of cspell.yml..."
+    Write-Information "##[command]Retrieving contents of cspell.yml..."
     $cspellFileContents = @(Get-Content -Path ./cspell.yml)
-    Write-Verbose "##[debug]Finished retrieving the contents cspell.yml."
 
-    Write-Output "##[section]Checking cspell.yml file..."
+    Write-Information "##[command]Checking cspell.yml file..."
     $lintingErrors = @()
 
     # The below if statements will cause an exception if the file is empty or only a single line. This is fine as the config
@@ -718,7 +718,7 @@ function Test-CSpellConfigurationFile {
         $lintingErrors += @{lineNumber = 2; line = "'$($cspellFileContents[1])'"; errorMessage = "Invalid language. Expected 'language: en-gb'." }
     }
 
-    Write-Verbose "##[debug]Retrieving 'dictionaries', 'ignorePaths', 'words' and 'ignoreWords'..."
+    Write-Information "##[command]Retrieving 'dictionaries', 'ignorePaths', 'words' and 'ignoreWords'..."
     $expectedOrderOfKeys = @("version", "language", "dictionaries", "ignorePaths", "words", "ignoreWords")
     $orderOfKeys = @()
 
@@ -826,15 +826,11 @@ function Test-CSpellConfigurationFile {
         }
     }
 
-    Write-Verbose "##[debug]Retrieved entries 'dictionaries', 'ignorePaths', 'words' and 'ignoreWords'."
-
     if (Compare-ObjectExact -ReferenceObject $expectedOrderOfKeys -DifferenceObject $orderOfKeys) {
         $lintingErrors += @{lineNumber = "-"; line = "-"; errorMessage = "Keys are missing, incorrectly ordered, incorrectly cased, or contain an unexpected key. Expected the following order of keys: 'version', 'language', 'dictionaries', 'ignorePaths', 'words', 'ignoreWords'." }
     }
 
-    Write-Verbose "##[debug]Finished checking cspell.yml file."
-
-    Write-Output "##[section]Checking 'dictionaries', 'ignorePaths', 'words' and 'ignoreWords' are alphabetically ordered..."
+    Write-Information "##[command]Checking 'dictionaries', 'ignorePaths', 'words' and 'ignoreWords' are alphabetically ordered..."
 
     if (Compare-ObjectExact -ReferenceObject ($cspellDictionaries | Sort-Object) -DifferenceObject $cspellDictionaries) {
         $lintingErrors += @{lineNumber = "-"; line = "-"; errorMessage = "'dictionaries' is not alphabetically ordered." }
@@ -852,12 +848,10 @@ function Test-CSpellConfigurationFile {
         $lintingErrors += @{lineNumber = "-"; line = "-"; errorMessage = "'ignoreWords' is not alphabetically ordered." }
     }
 
-    Write-Verbose "##[debug]Finished checking 'ignorePaths', 'words' and 'ignoreWords' are alphabetically ordered."
-
-    Write-Output "##[section]Checking 'ignorePaths' matches the .gitignore file..."
+    Write-Information "##[command]Checking 'ignorePaths' matches the .gitignore file..."
 
     if (-Not (Test-Path -Path "./.gitignore")) {
-        Write-Output "##[debug]No gitignore file found at current directory!"
+        Write-Information "##[warning]No gitignore file found at current directory!"
         $gitignoreFileContents = @()
     }
 
@@ -872,9 +866,7 @@ function Test-CSpellConfigurationFile {
         $lintingErrors += @{lineNumber = "-"; line = "-"; errorMessage = "'ignorePaths' does not match the entries in .gitignore." }
     }
 
-    Write-Output "##[debug]Finished checking 'ignorePaths' matches the .gitignore file."
-
-    Write-Output "##[section]Checking if 'words' are found in 'ignoreWords'..."
+    Write-Information "##[command]Checking if 'words' are found in 'ignoreWords'..."
 
     # Re-iterate over cspell file to give line number context
     for ($index = 0; $index -lt $cspellFileContents.Length; $index++) {
@@ -902,9 +894,7 @@ function Test-CSpellConfigurationFile {
         }
     }
 
-    Write-Verbose "##[debug]Finished checking if 'words' are found in 'ignoreWords'."
-
-    Write-Output "##[section]Checking for redundant 'words' and 'ignoreWords'..."
+    Write-Information "##[command]Checking for redundant 'words' and 'ignoreWords'..."
 
     Write-Verbose "##[debug]Retrieving all files to check..."
     # Same file list as found in Test-CodeUsingCSpell but also exclude cspell.yml (assumes cspell.yml is the only file with a file name of cspell)
@@ -955,8 +945,6 @@ function Test-CSpellConfigurationFile {
         $lintingErrors += @{lineNumber = "-"; line = "-"; errorMessage = "The following 'ignoreWords' are redundant: $($redundantCSpellIgnoreWords | ForEach-Object { "'$_'" })" }
     }
 
-    Write-Output "##[section]Finished checking for redundant 'words' and 'ignoreWords'."
-
     if ($lintingErrors.Length -gt 0) {
         $lintingErrors | Sort-Object { $_.lineNumber }, { $_.errorMessage } | ForEach-Object { [PSCustomObject]$_ } | Format-Table -AutoSize -Wrap -Property lineNumber, line, errorMessage
         Write-Error "##[error]Please resolve the above errors!"
@@ -995,13 +983,12 @@ function Test-GitAttributesFile {
     [CmdletBinding()]
     param()
 
-    Write-Output "##[section]Running Test-GitattributesFile..."
+    Write-Verbose "##[debug]Running Test-GitattributesFile..."
 
-    Write-Output "##[section]Retrieving contents of .gitattributes..."
+    Write-Information "##[command]Retrieving contents of .gitattributes..."
     $gitattributesFileContents = @(Get-Content -Path ./.gitattributes)
-    Write-Verbose "##[debug]Finished retrieving the contents .gitattributes."
 
-    Write-Output "##[section]Retrieving all unique file extensions and unique files without a file extension..."
+    Write-Information "##[command]Retrieving all unique file extensions and unique files without a file extension..."
     $gitTrackedFiles = git ls-files -c | ForEach-Object { if (-Not $_.StartsWith("submodules")) { $_ } } | Split-Path -Leaf # Exclude submodules
 
     $uniqueGitTrackedFileExtensions = $gitTrackedFiles | ForEach-Object { if ($_.Split(".").Length -gt 1) { "\.$($_.Split(".")[-1])" } } | Sort-Object | Select-Object -Unique
@@ -1017,14 +1004,14 @@ function Test-GitAttributesFile {
     }
 
     Write-Verbose "##[debug]Retrieved unique file extensions:"
-    $uniqueGitTrackedFileExtensions | ForEach-Object { "##[debug]$($_.TrimStart("\"))" } | Write-Verbose
+    $uniqueGitTrackedFileExtensions | ForEach-Object { Write-Verbose "##[debug]$($_.TrimStart("\"))" }
 
     Write-Verbose "##[debug]Retrieved unique files without a file extension:"
-    $uniqueGitTrackedFileNamesWithoutExtensions | ForEach-Object { "##[debug]$_" } | Write-Verbose
+    $uniqueGitTrackedFileNamesWithoutExtensions | ForEach-Object { Write-Verbose "##[debug]$_" }
 
     $uniqueGitTrackedFileExtensionsAndFileNamesWithoutExtensions = $uniqueGitTrackedFileExtensions + $uniqueGitTrackedFileNamesWithoutExtensions
 
-    Write-Output "##[section]Checking .gitattributes file..."
+    Write-Information "##[command]Checking formatting of .gitattributes file..."
     $lintingErrors = @()
     $foundEntries = @()
     $previousLineWasBlank = $false
@@ -1112,9 +1099,7 @@ function Test-GitAttributesFile {
         $previousLineWasBlank = $false
     }
 
-    Write-Verbose "##[debug]Finished checking .gitattributes file."
-
-    Write-Output "##[section]Checking all unique file extensions and files without extensions have a .gitattributes entry:"
+    Write-Information "##[command]Checking all unique file extensions and files without extensions have a .gitattributes entry:"
 
     foreach ($fileExtensionOrFileNameWithoutExtension in $uniqueGitTrackedFileExtensionsAndFileNamesWithoutExtensions) {
 
@@ -1133,8 +1118,6 @@ function Test-GitAttributesFile {
             $lintingErrors += @{lineNumber = "-"; line = "-"; errorMessage = "'$($fileExtensionOrFileNameWithoutExtension.TrimStart("\"))' does not have a .gitattributes entry." }
         }
     }
-
-    Write-Verbose "##[debug]Finished checking that all unique file extensions and files without extensions have a .gitattributes entry."
 
     if ($lintingErrors.Length -gt 0) {
         $lintingErrors | Sort-Object { $_.lineNumber }, { $_.errorMessage } | ForEach-Object { [PSCustomObject]$_ } | Format-Table -AutoSize -Wrap -Property lineNumber, line, errorMessage
@@ -1174,18 +1157,17 @@ function Test-GitIgnoreFile {
     [CmdletBinding()]
     param()
 
-    Write-Output "##[section]Running Test-GitIgnoreFile..."
+    Write-Verbose "##[debug]Running Test-GitIgnoreFile..."
 
     if (-Not (Test-Path -Path "./.gitignore")) {
-        Write-Output "##[section]No gitignore file found at current directory!"
+        Write-Information "##[warning]No gitignore file found at current directory!"
         return
     }
 
-    Write-Output "##[section]Retrieving contents of .gitignore..."
+    Write-Information "##[command]Retrieving contents of .gitignore..."
     $gitignoreFileContents = @(Get-Content -Path ./.gitignore)
-    Write-Verbose "##[debug]Finished retrieving the contents .gitignore."
 
-    Write-Output "##[section]Checking .gitignore file..."
+    Write-Information "##[command]Checking formatting of .gitignore file..."
     $lintingErrors = @()
     $foundEntries = @()
 
@@ -1235,9 +1217,7 @@ function Test-GitIgnoreFile {
         }
     }
 
-    Write-Verbose "##[debug]Finished checking .gitignore file."
-
-    Write-Output "##[section]Checking all entries are alphabetically ordered..."
+    Write-Information "##[command]Checking all entries are alphabetically ordered..."
 
     if ($foundEntries.Length -gt 1) {
 
@@ -1247,8 +1227,6 @@ function Test-GitIgnoreFile {
             $lintingErrors += @{lineNumber = "-"; line = "-"; errorMessage = "Entries are not alphabetically ordered." }
         }
     }
-
-    Write-Verbose "##[debug]Finished checking all entries are alphabetically ordered."
 
     if ($lintingErrors.Length -gt 0) {
         $lintingErrors | Sort-Object { $_.lineNumber }, { $_.errorMessage } | ForEach-Object { [PSCustomObject]$_ } | Format-Table -AutoSize -Wrap -Property lineNumber, line, errorMessage
