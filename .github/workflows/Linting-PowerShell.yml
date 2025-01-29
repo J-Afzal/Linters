@@ -63,43 +63,43 @@ jobs:
             - name: Install linting dependencies
               id: dependencies
               run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
                   Install-LintingDependencies -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose
 
             - name: Run gitignore linter
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_gitignore_linter
               run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
                   Test-GitIgnoreFile -Verbose
 
             - name: Run gitattributes linter
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_gitattributes_linter
               run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
                   Test-GitAttributesFile -Verbose
 
             - name: Run cspell configuration linter
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cspell_configuration_linter
               run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1
-                  Test-CSpellConfigurationFile -Verbose
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
+                  Test-CSpellConfiguration -Verbose
 
             - name: Run cspell
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cspell_linter
               run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
                   Test-CodeUsingCSpell -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -PathBackToRepositoryRoot ${{ inputs.path_back_to_repository_root }} -Verbose
 
             - name: Run prettier
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_prettier_linter
               run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
                   Test-CodeUsingPrettier -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -PathBackToRepositoryRoot ${{ inputs.path_back_to_repository_root }} -Verbose
 
             - name: Run PSScriptAnalyzer
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_psscript_analyzer_linter
               run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
                   Test-CodeUsingPSScriptAnalyzer -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose
 
             - name: Run clang tools
@@ -137,4 +137,4 @@ jobs:
                   # Configure CMake to create the "compile_commands.json" file
                   cmake -S . -B ./build -G "Ninja"
 
-                  pwsh -command "Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-ps1/Linters.psd1; Test-CodeUsingClangTools -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose"
+                  pwsh -command "Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1; Test-CodeUsingClangTools -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose"
