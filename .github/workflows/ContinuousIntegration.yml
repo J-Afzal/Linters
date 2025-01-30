@@ -13,4 +13,3 @@ jobs:
         with:
             path_to_linters_submodule_root: "."
             path_back_to_repository_root: "."
-            run_clang_tools_linter: false
