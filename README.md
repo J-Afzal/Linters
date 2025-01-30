@@ -33,11 +33,14 @@ configuring CMake for the clang-based linters).
 TODO - Linters
 
 Add azure pipeline templates
+    # TODO: can matrix os be made in to array like github actions?
+    # TODO: check that other jobs skip if this install linting deps step fails
+    Add to terminal games to check template works
 
 run pipelines against empty repo
-required github workflows
 
-use command more often in write-output (check if triggers work and then use in terminal games to check if template works)
+Add logic to prevent multiple cd deployments on a day (and need to turn off azure pipeline cd)
+
 
 TODO - Terminal Games
 
