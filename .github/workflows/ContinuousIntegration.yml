@@ -8,7 +8,7 @@ on:
             - main
 
 jobs:
-    linters-ps1:
+    linters-powershell:
         uses: ./.github/workflows/Linting-PowerShell.yml
         with:
             path_to_linters_submodule_root: "."
