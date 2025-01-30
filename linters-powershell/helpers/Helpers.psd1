@@ -12,7 +12,7 @@
         "Test-CodeUsingCSpell",
         "Test-CodeUsingPrettier",
         "Test-CodeUsingPSScriptAnalyzer",
-        "Test-CSpellConfigurationFile",
+        "Test-CSpellConfiguration",
         "Test-GitAttributesFile",
         "Test-GitIgnoreFile",
         "Test-PrettierIgnoreFile"

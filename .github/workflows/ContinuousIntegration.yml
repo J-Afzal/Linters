@@ -9,8 +9,7 @@ on:
 
 jobs:
     linters-ps1:
-        uses: ./.github/workflows/Linting-ps1.yml
+        uses: ./.github/workflows/Linting-PowerShell.yml
         with:
             path_to_linters_submodule_root: "."
             path_back_to_repository_root: "."
-            run_clang_tools_linter: false
