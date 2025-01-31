@@ -109,7 +109,7 @@ jobs:
                   # Exit with a warning if no CMakeLists.txt found
                   if [ ! -f ./CMakeLists.txt ]; then
                       echo "##[warning]No CMakeLists.txt file found at current directory! Please check if this is expected!"
-                      return
+                      exit 0
                   fi
 
                   # Install the ninja and the latest version of clang-tidy and clang-format
