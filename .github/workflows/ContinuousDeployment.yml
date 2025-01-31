@@ -12,12 +12,14 @@ jobs:
         runs-on: ubuntu-latest
         defaults:
             run:
-                shell: bash
+                shell: pwsh
 
         steps:
             - uses: actions/checkout@v4
 
             - name: Create new release
-              run: gh release create "linters-$(date +%Y-%m-%d)-(${{ github.run_number }})" --generate-notes --latest
+              run: |
+                  $currentDate = Get-Date -Format "yyyy-MM-dd"
+                  gh release create "linters-$currentDate" --generate-notes --latest
               env:
                   GH_TOKEN: ${{ github.token }}
