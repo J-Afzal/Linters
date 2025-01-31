@@ -106,6 +106,12 @@ jobs:
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_clang_tools_linter
               shell: bash
               run: |
+                  # Exit with a warning if no CMakeLists.txt found
+                  if [ ! -f ./CMakeLists.txt ]; then
+                      echo "##[warning]No CMakeLists.txt file found at current directory! Please check if this is expected!"
+                      exit 0
+                  fi
+
                   # Install the ninja and the latest version of clang-tidy and clang-format
                   if [ ${{ matrix.os }} = macos-latest ]
                   then

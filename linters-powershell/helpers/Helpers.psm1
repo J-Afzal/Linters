@@ -702,6 +702,11 @@ function Test-CSpellConfiguration {
 
     Write-Verbose "##[debug]Running Test-CSpellConfiguration..."
 
+    if (-Not (Test-Path -Path ./cspell.yml)) {
+        Write-Information "##[warning]No cspell.yml file found at current directory! Please check if this is expected!"
+        return
+    }
+
     Write-Information "##[command]Retrieving contents of cspell.yml..."
     $cspellFileContents = @(Get-Content -Path ./cspell.yml)
 
@@ -850,8 +855,8 @@ function Test-CSpellConfiguration {
 
     Write-Information "##[command]Checking 'ignorePaths' matches the .gitignore file..."
 
-    if (-Not (Test-Path -Path "./.gitignore")) {
-        Write-Information "##[warning]No gitignore file found at current directory!"
+    if (-Not (Test-Path -Path ./.gitignore)) {
+        Write-Information "##[warning]No .gitignore file found at current directory! Please check if this is expected!"
         $gitignoreFileContents = @()
     }
 
@@ -984,6 +989,11 @@ function Test-GitAttributesFile {
     param()
 
     Write-Verbose "##[debug]Running Test-GitattributesFile..."
+
+    if (-Not (Test-Path -Path ./.gitattributes)) {
+        Write-Information "##[warning]No .gitattributes file found at current directory! Please check if this is expected!"
+        return
+    }
 
     Write-Information "##[command]Retrieving contents of .gitattributes..."
     $gitattributesFileContents = @(Get-Content -Path ./.gitattributes)
@@ -1159,8 +1169,8 @@ function Test-GitIgnoreFile {
 
     Write-Verbose "##[debug]Running Test-GitIgnoreFile..."
 
-    if (-Not (Test-Path -Path "./.gitignore")) {
-        Write-Information "##[warning]No gitignore file found at current directory!"
+    if (-Not (Test-Path -Path ./.gitignore)) {
+        Write-Information "##[warning]No .gitignore file found at current directory! Please check if this is expected!"
         return
     }
 
