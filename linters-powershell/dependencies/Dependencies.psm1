@@ -65,7 +65,7 @@ function Install-LintingDependencies {
             }
 
             windows-latest {
-                & choco install doxygen -y
+                & choco install doxygen.install -y
             }
 
             default {
