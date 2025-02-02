@@ -102,8 +102,8 @@ jobs:
                       sudo apt-get install ninja-build
                       sudo apt-get install clang-19
 
-                      update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-19
-                      update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-19
+                      update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-19 1000
+                      update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-19 1000
                   fi
 
                   if [ ${{ matrix.os }} = windows-latest ]
