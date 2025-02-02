@@ -40,7 +40,7 @@ jobs:
               id: dependencies
               run: |
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
-                  Install-LintingDependencies -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose
+                  Install-LintingDependencies -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Platform ${{ matrix.os }} -InstallCppDependencies:$${{ inputs.run_cpp_linters }} -Verbose
 
             - name: Run gitignore linter
               if: (success() || failure()) && steps.dependencies.outcome == 'success'
