@@ -78,7 +78,7 @@ function Get-AllFilePathsToTest {
 
     Write-Verbose "##[debug]Running Get-AllFilePathsToTest..."
 
-    $allFilesToTest = Get-FilteredFilePathsToTest -FileExtensionFilter "Exclude" -FileExtensions @("") -FileNameFilter "Exclude" -FileNames @("")
+    $allFilesToTest = Get-FilteredFilePathsToTest -DirectoryFilterType "Exclude" -DirectoryNameFilterList @("") -FileNameFilterType "Exclude" -FileNameFilterList @("") -FileExtensionFilterType "Exclude" -FileExtensionFilterList @("")
 
     Write-Verbose "##[debug]Returning:"
     $allFilesToTest | ForEach-Object { Write-Verbose "##[debug]    $_" }
@@ -94,22 +94,30 @@ function Get-AllFilePathsToTest {
     None.
 
     .INPUTS
-    string FileExtensionFilter. Whether to include or exclude the FileExtensions in the search.
+    string DirectoryFilterType. Whether to include or exclude the DirectoryNameFilterList in the search.
 
-    system.object[] FileExtensions. The file extensions to either include or exclude depending upon the value of
-    FileExtensionFilter.
+    system.object[] DirectoryNameFilterList. The directory paths from the root of the repo to either include or exclude
+    depending upon the value of DirectoryFilterType.
 
-    string FileNameFilter. Whether to include or exclude the FileNames in the search.
+    string FileNameFilterType. Whether to include or exclude the FileNameFilterList in the search.
 
-    system.object[] FileNames. The file names (without file extension) to either include or exclude depending upon the value of
-    FileNameFilter.
+    system.object[] FileNameFilterList. The file names (without file extension) to either include or exclude depending upon the
+    value of FileNameFilterType.
+
+    string FileExtensionFilterType. Whether to include or exclude the FileExtensionFilterList in the search.
+
+    system.object[] FileExtensionFilterList. The file extensions to either include or exclude depending upon the value of
+    FileExtensionFilterType.
 
     .OUTPUTS
     system.object[] A list of file paths (relative to the root of the repository).
 
     .EXAMPLE
     Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
-    Get-FilteredFilePathsToTest -FileExtensionFilter "Include" -FileExtensions @("json", "md", "yml") -FileNameFilter "Exclude" -FileNames @("package-lock") -Verbose
+
+    Get-FilteredFilePathsToTest -DirectoryFilterType "Exclude" -DirectoryNameFilterList @("docs/html") \
+                                -FileNameFilterType "Exclude" -FileNameFilterList @("cspell", "package-lock") \
+                                -FileExtensionFilterType "Exclude" -FileExtensionFilterList @("ico", "png") -Verbose
 #>
 
 function Get-FilteredFilePathsToTest {
@@ -117,61 +125,113 @@ function Get-FilteredFilePathsToTest {
     [CmdletBinding()]
     [OutputType([system.object[]])]
     param(
-        [Parameter(Position=0, Mandatory=$false, ParameterSetName="FileExtensionSearch")]
-        [Parameter(Position=0, Mandatory=$false, ParameterSetName="FileExtensionAndFileNameSearch")]
+        [Parameter(Position=0, Mandatory=$false, ParameterSetName="DirectorySearch")]
+        [Parameter(Position=0, Mandatory=$false, ParameterSetName="FullSearch")]
         [ValidateSet("Include", "Exclude")]
         [string]
-        $FileExtensionFilter,
+        $DirectoryFilterType,
 
-        [Parameter(Position=1, Mandatory=$true, ParameterSetName="FileExtensionSearch")]
-        [Parameter(Position=1, Mandatory=$true, ParameterSetName="FileExtensionAndFileNameSearch")]
+        [Parameter(Position=1, Mandatory=$true, ParameterSetName="DirectorySearch")]
+        [Parameter(Position=1, Mandatory=$true, ParameterSetName="FullSearch")]
         [system.object[]]
-        $FileExtensions,
+        $DirectoryNameFilterList,
 
         [Parameter(Position=2, Mandatory=$false, ParameterSetName="FileNameSearch")]
-        [Parameter(Position=2, Mandatory=$false, ParameterSetName="FileExtensionAndFileNameSearch")]
+        [Parameter(Position=2, Mandatory=$false, ParameterSetName="FileNameAndFileExtensionSearch")]
+        [Parameter(Position=2, Mandatory=$false, ParameterSetName="FullSearch")]
         [ValidateSet("Include", "Exclude")]
         [string]
-        $FileNameFilter,
+        $FileNameFilterType,
 
         [Parameter(Position=3, Mandatory=$true, ParameterSetName="FileNameSearch")]
-        [Parameter(Position=3, Mandatory=$true, ParameterSetName="FileExtensionAndFileNameSearch")]
+        [Parameter(Position=3, Mandatory=$true, ParameterSetName="FileNameAndFileExtensionSearch")]
+        [Parameter(Position=3, Mandatory=$true, ParameterSetName="FullSearch")]
         [system.object[]]
-        $FileNames
+        $FileNameFilterList,
+
+        [Parameter(Position=4, Mandatory=$false, ParameterSetName="FileExtensionSearch")]
+        [Parameter(Position=4, Mandatory=$false, ParameterSetName="FileNameAndFileExtensionSearch")]
+        [Parameter(Position=4, Mandatory=$false, ParameterSetName="FullSearch")]
+        [ValidateSet("Include", "Exclude")]
+        [string]
+        $FileExtensionFilterType,
+
+        [Parameter(Position=5, Mandatory=$true, ParameterSetName="FileExtensionSearch")]
+        [Parameter(Position=5, Mandatory=$true, ParameterSetName="FileNameAndFileExtensionSearch")]
+        [Parameter(Position=5, Mandatory=$true, ParameterSetName="FullSearch")]
+        [system.object[]]
+        $FileExtensionFilterList
     )
 
     Write-Verbose "##[debug]Running Get-FilteredFilePathsToTest..."
     Write-Verbose "##[debug]Parameters:"
-    Write-Verbose "##[debug]    FileExtensionFilter: $FileExtensionFilter"
-    Write-Verbose "##[debug]    FileExtensions:"
-    $FileExtensions | ForEach-Object { Write-Verbose "##[debug]        $_" }
-    Write-Verbose "##[debug]    FileNameFilter: $FileNameFilter"
-    Write-Verbose "##[debug]    FileNames:"
-    $FileNames | ForEach-Object { Write-Verbose "##[debug]        $_" }
+    Write-Verbose "##[debug]    DirectoryFilterType: $DirectoryFilterType"
+    Write-Verbose "##[debug]    DirectoryNameFilterList:"
+    $DirectoryNameFilterList | ForEach-Object { Write-Verbose "##[debug]        $_" }
+    Write-Verbose "##[debug]    FileNameFilterType: $FileNameFilterType"
+    Write-Verbose "##[debug]    FileNameFilterList:"
+    $FileNameFilterList | ForEach-Object { Write-Verbose "##[debug]        $_" }
+    Write-Verbose "##[debug]    FileExtensionFilterType: $FileExtensionFilterType"
+    Write-Verbose "##[debug]    FileExtensionFilterList:"
+    $FileExtensionFilterList | ForEach-Object { Write-Verbose "##[debug]        $_" }
 
-    if ($FileExtensionFilter -eq "Include") {
-
-        if ($FileNameFilter -eq "Include") {
-            $filteredFilesToTest = git ls-files -c | ForEach-Object { if (($_.Split(".")[-1] -In $FileExtensions) -And ($_.Split(".")[-2] -In $FileNames) -And (-Not $_.StartsWith("submodules"))) { $_ } } # Exclude submodules folder
-        }
-
-        else {
-            $filteredFilesToTest = git ls-files -c | ForEach-Object { if (($_.Split(".")[-1] -In $FileExtensions) -And ($_.Split(".")[-2] -NotIn $FileNames) -And (-Not $_.StartsWith("submodules"))) { $_ } } # Exclude submodules folder
-        }
-    }
-
-    else {
-
-        if ($FileNameFilter -eq "Include") {
-            $filteredFilesToTest = git ls-files -c | ForEach-Object { if (($_.Split(".")[-1] -NotIn $FileExtensions) -And ($_.Split(".")[-2] -In $FileNames) -And (-Not $_.StartsWith("submodules"))) { $_ } } # Exclude submodules folder
-        }
-
-        else {
-            $filteredFilesToTest = git ls-files -c | ForEach-Object { if (($_.Split(".")[-1] -NotIn $FileExtensions) -And ($_.Split(".")[-2] -NotIn $FileNames) -And (-Not $_.StartsWith("submodules"))) { $_ } } # Exclude submodules folder
-        }
-    }
-
+    $allFiles = git ls-files -c
     Assert-ExternalCommandError -ThrowError
+
+    $filteredFilesToTest = @()
+
+    foreach ($file in $allFiles) {
+
+        # Exclude submodules
+        if ($file.StartsWith("submodules")) {
+            continue
+        }
+
+        # Check if file directory is in allow list
+        $fileDirectoryIsAllowed = if ($DirectoryFilterType -eq "Include") { $false } else { $true }
+
+        foreach ($directoryFilter in $DirectoryNameFilterList) {
+            if ($file.StartsWith($directoryFilter)) {
+                $fileDirectoryIsAllowed = if ($DirectoryFilterType -eq "Include") { $true } else { $false }
+                break
+            }
+        }
+
+        # If directory is not allowed skip further checks and go to next file
+        if (-Not $fileDirectoryIsAllowed) {
+            continue
+        }
+
+        # Check if file name is in allow list
+        $fileNameIsAllowed = if ($FileNameFilterType -eq "Include") { $false } else { $true }
+
+        $fileName = $file.Split("/")[-1].Split(".")[-2]
+
+        if ($fileName -In $FileNameFilterList) {
+            $fileNameIsAllowed = if ($FileNameFilterType -eq "Include") { $true } else { $false }
+        }
+
+        # If file name is not allowed skip further checks and go to next file
+        if (-Not $fileNameIsAllowed) {
+            continue
+        }
+
+        # Check if file name is in allow list
+        $fileExtensionIsAllowed = if ($FileExtensionFilterType -eq "Include") { $false } else { $true }
+
+        $fileExtension = $file.Split(".")[-1]
+
+        if ($fileExtension -In $FileExtensionFilterList) {
+            $fileExtensionIsAllowed = if ($FileExtensionFilterType -eq "Include") { $true } else { $false }
+        }
+
+        # If file extension is not allowed skip further checks and go to next file
+        if (-Not $fileExtensionIsAllowed) {
+            continue
+        }
+
+        $filteredFilesToTest += $file
+    }
 
     Write-Verbose "##[debug]Returning:"
     $filteredFilesToTest | ForEach-Object { Write-Verbose "##[debug]    $_" }
@@ -321,6 +381,8 @@ function Test-CodeUsingAllLinters {
 
     Test-CodeUsingClangTools -PathToLintersSubmodulesRoot $PathToLintersSubmodulesRoot -FixClangTidyErrors:$FixClangTidyErrors -FixClangFormatErrors:$FixClangFormatErrors
 
+    Test-DoxygenDocumentation -Verbose
+
     Write-Output "##[section]All linting tests passed!"
 }
 
@@ -371,7 +433,7 @@ function Test-CodeUsingClangTools {
     Write-Verbose "##[debug]    FixClangFormatErrors: $FixClangFormatErrors"
 
     Write-Information "##[command]Retrieving all files to test against clang-tidy and clang-format..."
-    $filesToTest = Get-FilteredFilePathsToTest -FileExtensionFilter "Include" -FileExtensions @("cpp", "hpp")
+    $filesToTest = Get-FilteredFilePathsToTest -FileExtensionFilterType "Include" -FileExtensionFilterList @("cpp", "hpp")
 
     if ($null -eq $filesToTest) {
         Write-Information "##[warning]No files found to lint for clang tools! Please check if this is expected!"
@@ -486,7 +548,7 @@ function Test-CodeUsingCSpell {
     Write-Verbose "##[debug]    PathBackToRepositoryRoot: $PathBackToRepositoryRoot"
 
     Write-Information "##[command]Retrieving all files to test against cspell..."
-    $filesToTest = Get-FilteredFilePathsToTest -FileExtensionFilter "Exclude" -FileExtensions @("ico", "png") -FileNameFilter "Exclude" @("package-lock")
+    $filesToTest = Get-FilteredFilePathsToTest -DirectoryFilterType "Exclude" -DirectoryNameFilterList @("docs/html") -FileNameFilterType "Exclude" -FileNameFilterList @("package-lock") -FileExtensionFilterType "Exclude" -FileExtensionFilterList @("ico", "png")
 
     if ($null -eq $filesToTest) {
         Write-Information "##[warning]No files found to lint for cspell! Please check if this is expected!"
@@ -562,7 +624,7 @@ function Test-CodeUsingPrettier {
     Write-Verbose "##[debug]    PathBackToRepositoryRoot: $PathBackToRepositoryRoot"
 
     Write-Information "##[command]Retrieving all files to test against prettier..."
-    $filesToTest = Get-FilteredFilePathsToTest -FileExtensionFilter "Include" -FileExtensions @("clang-format", "clang-tidy", "json", "md", "yml") -FileNameFilter "Exclude" @("package-lock")
+    $filesToTest = Get-FilteredFilePathsToTest -FileNameFilterType "Exclude" -FileNameFilterList @("package-lock") -FileExtensionFilterType "Include" -FileExtensionFilterList @("clang-format", "clang-tidy", "json", "md", "yml")
 
     if ($null -eq $filesToTest) {
         Write-Information "##[warning]No files found to lint for prettier! Please check if this is expected!"
@@ -633,7 +695,7 @@ function Test-CodeUsingPSScriptAnalyzer {
     Write-Verbose "##[debug]    PathToLintersSubmodulesRoot: $PathToLintersSubmodulesRoot"
 
     Write-Information "##[command]Retrieving all files to test against PSScriptAnalyzer..."
-    $filesToTest = Get-FilteredFilePathsToTest -FileExtensionFilter "Include" -FileExtensions @("ps1", "psd1", "psm1")
+    $filesToTest = Get-FilteredFilePathsToTest -FileExtensionFilterType "Include" -FileExtensionFilterList @("ps1", "psd1", "psm1")
 
     if ($null -eq $filesToTest) {
         Write-Information "##[warning]No files found to lint for PSScriptAnalyzer! Please check if this is expected!"
@@ -866,6 +928,7 @@ function Test-CSpellConfiguration {
 
     # Add package-lock.json and re-sort gitattributes
     $gitignoreFileContents += "package-lock.json"
+    $gitignoreFileContents += "docs/html/"
 
     if (Compare-ObjectExact -ReferenceObject ($gitignoreFileContents | Sort-Object) -DifferenceObject $cspellIgnorePaths) {
         $lintingErrors += @{lineNumber = "-"; line = "-"; errorMessage = "'ignorePaths' does not match the entries in .gitignore." }
@@ -903,7 +966,7 @@ function Test-CSpellConfiguration {
 
     Write-Verbose "##[debug]Retrieving all files to check..."
     # Same file list as found in Test-CodeUsingCSpell but also exclude cspell.yml (assumes cspell.yml is the only file with a file name of cspell)
-    $allFilesToCheck = @(Get-FilteredFilePathsToTest -FileExtensionFilter "Exclude" -FileExtensions @("ico", "png") -FileNameFilter "Exclude" -FileNames @("cspell", "package-lock"))
+    $allFilesToCheck = @(Get-FilteredFilePathsToTest -DirectoryFilterType "Exclude" -DirectoryNameFilterList @("docs/html") -FileNameFilterType "Exclude" -FileNameFilterList @("cspell", "package-lock") -FileExtensionFilterType "Exclude" -FileExtensionFilterList @("ico", "png"))
 
     [Collections.Generic.List[String]] $redundantCSpellWords = $cspellWords
     [Collections.Generic.List[String]] $redundantCSpellIgnoreWords = $cspellIgnoreWords
