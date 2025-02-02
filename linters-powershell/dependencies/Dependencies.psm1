@@ -26,7 +26,11 @@ function Install-LintingDependencies {
     (
         [Parameter(Position=0, Mandatory=$true)]
         [string]
-        $PathToLintersSubmodulesRoot
+        $PathToLintersSubmodulesRoot,
+
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]
+        $Platform
     )
 
     Write-Output "##[section]Running Install-LintingDependencies..."
@@ -38,6 +42,28 @@ function Install-LintingDependencies {
     Write-Output "##[section]Installing npm dependencies..."
 
     npm install
+
+    Assert-ExternalCommandError -ThrowError
+
+    Write-Information "##[command]Installing doxygen..."
+
+    switch ($Platform) {
+        macos-latest {
+            & brew install doxygen
+        }
+
+        ubuntu-latest {
+            & sudo apt-get install doxygen
+        }
+
+        windows-latest {
+            & choco install doxygen -y
+        }
+
+        default {
+            Write-Error "##[error]Unsupported platform: $Platform"
+        }
+    }
 
     Assert-ExternalCommandError -ThrowError
 

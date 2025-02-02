@@ -112,7 +112,7 @@ jobs:
                   if [ ${{ matrix.os }} = windows-latest ]
                   then
                       choco install ninja -y
-                      choco install llvm -y
+                      choco upgrade llvm -y
                   fi
 
                   # Configure CMake to create the "compile_commands.json" file
