@@ -92,37 +92,24 @@ jobs:
                   if [ ${{ matrix.os }} = macos-latest ]
                   then
                       brew install ninja
-
-                      wget https://apt.llvm.org/llvm.sh
-                      chmod +x llvm.sh
-                      sudo ./llvm.sh 19
+                      brew install llvm
+                      # Override pre-installed clang by adding to the path
+                      export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
                   fi
 
                   if [ ${{ matrix.os }} = ubuntu-latest ]
                   then
                       sudo apt-get install ninja-build
+                      sudo apt-get install clang-19
 
-                      wget https://apt.llvm.org/llvm.sh
-                      chmod +x llvm.sh
-                      sudo ./llvm.sh 19
-
-                    #   # Install brew to get latest llvm and clang tools
-                    #   test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
-                    #   test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-                    #   echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
-                    #   export PATH="$HOME/.linuxbrew/bin:$PATH"
-
-                    #   brew install llvm
+                      update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-19
+                      update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-19
                   fi
-
 
                   if [ ${{ matrix.os }} = windows-latest ]
                   then
                       choco install ninja -y
-
-                      wget https://apt.llvm.org/llvm.sh
-                      chmod +x llvm.sh
-                      sudo ./llvm.sh 19
+                      choco install llvm -y
                   fi
 
                   clang-tidy --version
