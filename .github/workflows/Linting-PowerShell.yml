@@ -82,11 +82,11 @@ jobs:
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters
               shell: bash
               run: |
-                  #   # Exit with a warning if no CMakeLists.txt found
-                  #   if [ ! -f ./CMakeLists.txt ]; then
-                  #       echo "##[warning]No CMakeLists.txt file found at current directory! Please check if this is expected!"
-                  #       exit 0
-                  #   fi
+                  # Exit with a warning if no CMakeLists.txt found
+                  if [ ! -f ./CMakeLists.txt ]; then
+                      echo "##[warning]No CMakeLists.txt file found at current directory! Please check if this is expected!"
+                      exit 0
+                  fi
 
                   # Install the ninja and the latest version of clang-tidy and clang-format
                   if [ ${{ matrix.os }} = macos-latest ]
@@ -100,10 +100,13 @@ jobs:
                   if [ ${{ matrix.os }} = ubuntu-latest ]
                   then
                       sudo apt-get install ninja-build
-                      sudo apt-get install clang-19
 
-                      update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-19 1000
-                      update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-19 1000
+                      # Install brew to get latest llvm and clang tools
+                      test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
+                      test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+                      echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
+                      export PATH="$HOME/.linuxbrew/bin:$PATH"
+                      brew install llvm
                   fi
 
                   if [ ${{ matrix.os }} = windows-latest ]
@@ -111,9 +114,6 @@ jobs:
                       choco install ninja -y
                       choco install llvm -y
                   fi
-
-                  clang-tidy --version
-                  clang-format --version
 
                   # Configure CMake to create the "compile_commands.json" file
                   cmake -S . -B ./build -G "Ninja"
