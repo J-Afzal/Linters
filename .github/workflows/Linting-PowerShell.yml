@@ -93,15 +93,13 @@ jobs:
                   then
                       brew install ninja
                       brew install llvm
-                      # Override pre-installed clang by adding to the path
-                      export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
                   fi
 
                   if [ ${{ matrix.os }} = ubuntu-latest ]
                   then
                       sudo apt-get update
                       sudo apt-get install ninja-build
-                      sudo apt-get install clang
+                      sudo apt-get install clang-19
 
                     #   # Install brew to get latest llvm and clang tools
                     #   test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
@@ -112,7 +110,7 @@ jobs:
                     #   brew install llvm
                   fi
 
-                  
+
                   if [ ${{ matrix.os }} = windows-latest ]
                   then
                       choco install ninja -y
