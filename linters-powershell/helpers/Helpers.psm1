@@ -960,6 +960,57 @@ function Test-CSpellConfiguration {
     }
 }
 
+function Test-DoxygenDocumentation {
+
+    [CmdletBinding()]
+    param(
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]
+        $Platform,
+    )
+
+    Write-Verbose "##[debug]Running Test-DoxygenDocumentation..."
+
+    if (-Not (Test-Path -Path ./Doxyfile)) {
+        Write-Information "##[warning]No Doxyfile file found at current directory! Please check if this is expected!"
+        return
+    }
+
+    Write-Information "##[command]Installing doxygen..."
+
+    switch ($Platform) {
+        macos-latest {
+            & brew install doxygen
+        }
+
+        ubuntu-latest {
+            & sudo apt-get install doxygen
+        }
+
+        windows-latest {
+            & choco install doxygen -y
+        }
+
+        default {
+            Write-Error "##[error]Unsupported platform: $Platform"
+        }
+    }
+    
+    Assert-ExternalCommandError -ThrowError
+
+    Write-Information "##[command]Running doxygen..."
+    & doxygen ./Doxyfile
+    Assert-ExternalCommandError -ThrowError
+
+    Write-Information "##[command]Checking for git differences..."
+    & git update-index --really-refresh
+    if (Assert-ExternalCommandError) {
+        Write-Error "##[error]Comitted doxygen documentation is not up to date. Please check the above list of files which differ!"
+    }
+
+    Write-Output "##[section]Comitted doxygen documentation is up to date!"
+}
+
 <#
     .SYNOPSIS
     Lints the .gitattributes file.

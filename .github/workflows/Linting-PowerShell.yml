@@ -9,38 +9,14 @@ on:
             path_back_to_repository_root:
                 required: true
                 type: string
-            run_gitignore_linter:
+            run_powershell_linters:
                 required: false
                 type: boolean
-                default: true
-            run_gitattributes_linter:
+                default: false
+            run_cpp_linters:
                 required: false
                 type: boolean
-                default: true
-            run_cspell_configuration_linter:
-                required: false
-                type: boolean
-                default: true
-            run_prettier_ignore_linter:
-                required: false
-                type: boolean
-                default: true
-            run_cspell_linter:
-                required: false
-                type: boolean
-                default: true
-            run_prettier_linter:
-                required: false
-                type: boolean
-                default: true
-            run_psscript_analyzer_linter:
-                required: false
-                type: boolean
-                default: true
-            run_clang_tools_linter:
-                required: false
-                type: boolean
-                default: true
+                default: false
 
 jobs:
     lint:
@@ -67,50 +43,50 @@ jobs:
                   Install-LintingDependencies -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose
 
             - name: Run gitignore linter
-              if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_gitignore_linter
+              if: (success() || failure()) && steps.dependencies.outcome == 'success'
               run: |
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
                   Test-GitIgnoreFile -Verbose
 
             - name: Run gitattributes linter
-              if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_gitattributes_linter
+              if: (success() || failure()) && steps.dependencies.outcome == 'success'
               run: |
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
                   Test-GitAttributesFile -Verbose
 
             - name: Run cspell configuration linter
-              if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cspell_configuration_linter
+              if: (success() || failure()) && steps.dependencies.outcome == 'success'
               run: |
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
                   Test-CSpellConfiguration -Verbose
 
             - name: Run cspell
-              if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cspell_linter
+              if: (success() || failure()) && steps.dependencies.outcome == 'success'
               run: |
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
                   Test-CodeUsingCSpell -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -PathBackToRepositoryRoot ${{ inputs.path_back_to_repository_root }} -Verbose
 
             - name: Run prettier
-              if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_prettier_linter
+              if: (success() || failure()) && steps.dependencies.outcome == 'success'
               run: |
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
                   Test-CodeUsingPrettier -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -PathBackToRepositoryRoot ${{ inputs.path_back_to_repository_root }} -Verbose
 
             - name: Run PSScriptAnalyzer
-              if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_psscript_analyzer_linter
+              if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_powershell_linters
               run: |
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
                   Test-CodeUsingPSScriptAnalyzer -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose
 
             - name: Run clang tools
-              if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_clang_tools_linter
+              if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters
               shell: bash
               run: |
-                  # Exit with a warning if no CMakeLists.txt found
-                  if [ ! -f ./CMakeLists.txt ]; then
-                      echo "##[warning]No CMakeLists.txt file found at current directory! Please check if this is expected!"
-                      exit 0
-                  fi
+                  #   # Exit with a warning if no CMakeLists.txt found
+                  #   if [ ! -f ./CMakeLists.txt ]; then
+                  #       echo "##[warning]No CMakeLists.txt file found at current directory! Please check if this is expected!"
+                  #       exit 0
+                  #   fi
 
                   # Install the ninja and the latest version of clang-tidy and clang-format
                   if [ ${{ matrix.os }} = macos-latest ]
@@ -124,14 +100,17 @@ jobs:
                   if [ ${{ matrix.os }} = ubuntu-latest ]
                   then
                       sudo apt-get install ninja-build
+                      sudo apt-get install clang
+                      sudo apt-get install clang-tidy
+                      sudo apt-get install clang-format
 
-                      # Install brew to get latest llvm and clang tools
-                      test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
-                      test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-                      echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
-                      export PATH="$HOME/.linuxbrew/bin:$PATH"
+                    #   # Install brew to get latest llvm and clang tools
+                    #   test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
+                    #   test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+                    #   echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
+                    #   export PATH="$HOME/.linuxbrew/bin:$PATH"
 
-                      brew install llvm
+                    #   brew install llvm
                   fi
 
                   if [ ${{ matrix.os }} = windows-latest ]
@@ -140,7 +119,16 @@ jobs:
                       choco upgrade llvm -y
                   fi
 
+                  clang-tidy --version
+                  clang-format --version
+
                   # Configure CMake to create the "compile_commands.json" file
                   cmake -S . -B ./build -G "Ninja"
 
                   pwsh -command "Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1; Test-CodeUsingClangTools -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose"
+
+            - name: Check doxygen documentation is updated
+              if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters
+              run: |
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
+                  Test-DoxygenDocumentation -Platform ${{ matrix.os }} -Verbose
