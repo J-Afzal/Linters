@@ -101,8 +101,6 @@ jobs:
                   then
                       sudo apt-get install ninja-build
                       sudo apt-get install clang
-                      sudo apt-get install clang-tidy
-                      sudo apt-get install clang-format
 
                     #   # Install brew to get latest llvm and clang tools
                     #   test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
