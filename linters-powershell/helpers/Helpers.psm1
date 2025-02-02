@@ -927,10 +927,11 @@ function Test-CSpellConfiguration {
     }
 
     # Add package-lock.json and re-sort gitattributes
-    $gitignoreFileContents += "package-lock.json"
-    $gitignoreFileContents += "docs/html/"
+    [Collections.Generic.List[String]] $cspellIgnorePathsList = $cspellIgnorePaths
+    $cspellIgnorePathsList.Remove("package-lock.json")
+    $cspellIgnorePathsList.Remove("docs/html/")
 
-    if (Compare-ObjectExact -ReferenceObject ($gitignoreFileContents | Sort-Object) -DifferenceObject $cspellIgnorePaths) {
+    if (Compare-ObjectExact -ReferenceObject ($gitignoreFileContents | Sort-Object) -DifferenceObject $cspellIgnorePathsList) {
         $lintingErrors += @{lineNumber = "-"; line = "-"; errorMessage = "'ignorePaths' does not match the entries in .gitignore." }
     }
 
