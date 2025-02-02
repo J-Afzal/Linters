@@ -124,4 +124,4 @@ jobs:
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters
               run: |
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
-                  Test-DoxygenDocumentation -Platform ${{ matrix.os }} -Verbose
+                  Test-DoxygenDocumentation -Verbose
