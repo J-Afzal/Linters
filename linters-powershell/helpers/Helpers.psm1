@@ -966,7 +966,7 @@ function Test-DoxygenDocumentation {
     param(
         [Parameter(Position=0, Mandatory=$true)]
         [string]
-        $Platform,
+        $Platform
     )
 
     Write-Verbose "##[debug]Running Test-DoxygenDocumentation..."
@@ -995,7 +995,7 @@ function Test-DoxygenDocumentation {
             Write-Error "##[error]Unsupported platform: $Platform"
         }
     }
-    
+
     Assert-ExternalCommandError -ThrowError
 
     Write-Information "##[command]Running doxygen..."
