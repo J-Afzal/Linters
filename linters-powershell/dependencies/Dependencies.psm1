@@ -15,8 +15,8 @@ $ErrorActionPreference = "Stop"
     None.
 
     .EXAMPLE
-    Import-Module ./linters-ps1/Linters.psd1
-    Install-LintingDependencies -PathToLintersSubmodulesRoot "." -Verbose
+    Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
+    Install-LintingDependencies -PathToLintersSubmodulesRoot "." -Platform "macos-latest" -InstallCppDependencies -Verbose
 #>
 
 function Install-LintingDependencies {
@@ -26,12 +26,22 @@ function Install-LintingDependencies {
     (
         [Parameter(Position=0, Mandatory=$true)]
         [string]
-        $PathToLintersSubmodulesRoot
+        $PathToLintersSubmodulesRoot,
+
+        [Parameter(Position=0, Mandatory=$true)]
+        [string]
+        $Platform,
+
+        [Parameter(Position=0, Mandatory=$true)]
+        [switch]
+        $InstallCppDependencies
     )
 
     Write-Output "##[section]Running Install-LintingDependencies..."
     Write-Verbose "##[debug]Parameters:"
     Write-Verbose "##[debug]    PathToLintersSubmodulesRoot: $PathToLintersSubmodulesRoot"
+    Write-Verbose "##[debug]    Platform: $Platform"
+    Write-Verbose "##[debug]    InstallCppDependencies: $InstallCppDependencies"
 
     Set-Location -Path $PathToLintersSubmodulesRoot
 
@@ -41,7 +51,30 @@ function Install-LintingDependencies {
 
     Assert-ExternalCommandError -ThrowError
 
-    Write-Verbose "##[debug]Finished installing npm dependencies."
+    if ($InstallCppDependencies) {
+
+        Write-Information "##[command]Installing doxygen..."
+
+        switch ($Platform) {
+            macos-latest {
+                & brew install doxygen
+            }
+
+            ubuntu-latest {
+                & sudo apt-get install doxygen
+            }
+
+            windows-latest {
+                & choco install doxygen.install -y
+            }
+
+            default {
+                Write-Error "##[error]Unsupported platform: $Platform"
+            }
+        }
+
+        Assert-ExternalCommandError -ThrowError
+    }
 
     Write-Output "##[section]All linting dependencies installed!"
 }

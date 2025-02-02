@@ -8,6 +8,7 @@ ignorePaths:
     - package-lock.json
 words:
     - bugprone
+    - doxyfile
     - linters
 ignoreWords:
     - altera

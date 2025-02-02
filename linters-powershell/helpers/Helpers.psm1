@@ -15,7 +15,7 @@ $InformationPreference = "Continue"
     None.
 
     .EXAMPLE
-    Import-Module ./submodules/Linters/linters-ps1/Linters.psd1
+    Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
     npm install
     Assert-ExternalCommandError -ThrowError -Verbose
 #>
@@ -66,7 +66,7 @@ function Assert-ExternalCommandError {
 
 
     .EXAMPLE
-    Import-Module ./submodules/Linters/linters-ps1/Linters.psd1
+    Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
     Get-AllFilePathsToTest -Verbose
 #>
 
@@ -108,7 +108,7 @@ function Get-AllFilePathsToTest {
     system.object[] A list of file paths (relative to the root of the repository).
 
     .EXAMPLE
-    Import-Module ./submodules/Linters/linters-ps1/Linters.psd1
+    Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
     Get-FilteredFilePathsToTest -FileExtensionFilter "Include" -FileExtensions @("json", "md", "yml") -FileNameFilter "Exclude" -FileNames @("package-lock") -Verbose
 #>
 
@@ -195,7 +195,7 @@ function Get-FilteredFilePathsToTest {
     system.object[] A list of error messages.
 
     .EXAMPLE
-    Import-Module ./submodules/Linters/linters-ps1/Linters.psd1
+    Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
 
     $arrayOne = @(1,2,3)
     $arrayTwo = @(1,3,2)
@@ -275,7 +275,7 @@ function Compare-ObjectExact {
     None.
 
     .EXAMPLE
-    Import-Module ./submodules/Linters/linters-ps1/Linters.psd1
+    Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
     Test-CodeUsingAllLinters -PathToLintersSubmodulesRoot "./submodules/Linters" -PathBackToRepositoryRoot "../.." -FixClangTidyErrors -FixClangFormatErrors -Verbose
 #>
 
@@ -342,7 +342,7 @@ function Test-CodeUsingAllLinters {
     None.
 
     .EXAMPLE
-    Import-Module ./submodules/Linters/linters-ps1/Linters.psd1
+    Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
     Test-CodeUsingClangTools -PathToLintersSubmodulesRoot "./submodules/Linters" -FixClangTidyErrors -FixClangFormatErrors -Verbose
 #>
 
@@ -462,7 +462,7 @@ function Test-CodeUsingClangTools {
     None.
 
     .EXAMPLE
-    Import-Module ./submodules/Linters/linters-ps1/Linters.psd1
+    Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
     Test-CodeUsingCSpell -PathToLintersSubmodulesRoot "./submodules/Linters" -PathBackToRepositoryRoot "." -Verbose
 #>
 
@@ -538,7 +538,7 @@ function Test-CodeUsingCSpell {
     None.
 
     .EXAMPLE
-    Import-Module ./submodules/Linters/linters-ps1/Linters.psd1
+    Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
     Test-CodeUsingPrettier -PathToLintersSubmodulesRoot "./submodules/Linters" -PathBackToRepositoryRoot "../.." -Verbose
 #>
 
@@ -614,7 +614,7 @@ function Test-CodeUsingPrettier {
     None.
 
     .EXAMPLE
-    Import-Module ./submodules/Linters/linters-ps1/Linters.psd1
+    Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
     Test-CodeUsingPSScriptAnalyzer -PathToLintersSubmodulesRoot "./submodules/Linters" -Verbose
 #>
 
@@ -691,7 +691,7 @@ function Test-CodeUsingPSScriptAnalyzer {
     None.
 
     .EXAMPLE
-    Import-Module ./submodules/Linters/linters-ps1/Linters.psd1
+    Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
     Test-CSpellConfiguration -Verbose
 #>
 
@@ -962,6 +962,56 @@ function Test-CSpellConfiguration {
 
 <#
     .SYNOPSIS
+    Check that the comitted doxygen documentation is up to date.
+
+    .DESCRIPTION
+    Assumes doxygen is already installed.
+
+    .INPUTS
+    None.
+
+    .OUTPUTS
+    None.
+
+    .EXAMPLE
+    Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
+    Test-DoxygenDocumentation -Verbose
+#>
+function Test-DoxygenDocumentation {
+
+    [CmdletBinding()]
+    param()
+
+    Write-Verbose "##[debug]Running Test-DoxygenDocumentation..."
+
+    if (-Not (Test-Path -Path ./Doxyfile)) {
+        Write-Information "##[warning]No Doxyfile file found at current directory! Please check if this is expected!"
+        return
+    }
+
+    Write-Information "##[command]Performing git clean..."
+    & git clean --force -d -x
+    Assert-ExternalCommandError -ThrowError
+
+    Write-Information "##[command]Performing git reset..."
+    git reset --hard
+    Assert-ExternalCommandError -ThrowError
+
+    Write-Information "##[command]Running doxygen..."
+    & doxygen ./Doxyfile
+    Assert-ExternalCommandError -ThrowError
+
+    Write-Information "##[command]Checking for git differences..."
+    & git update-index --really-refresh
+    if (Assert-ExternalCommandError) {
+        Write-Error "##[error]Comitted doxygen documentation is not up to date. Please check the above list of files which differ!"
+    }
+
+    Write-Output "##[section]Comitted doxygen documentation is up to date!"
+}
+
+<#
+    .SYNOPSIS
     Lints the .gitattributes file.
 
     .DESCRIPTION
@@ -979,7 +1029,7 @@ function Test-CSpellConfiguration {
     None.
 
     .EXAMPLE
-    Import-Module ./submodules/Linters/linters-ps1/Linters.psd1
+    Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
     Test-GitattributesFile -Verbose
 #>
 
@@ -1158,7 +1208,7 @@ function Test-GitAttributesFile {
     None.
 
     .EXAMPLE
-    Import-Module ./submodules/Linters/linters-ps1/Linters.psd1
+    Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
     Test-GitIgnoreFile -Verbose
 #>
 
