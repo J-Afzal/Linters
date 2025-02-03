@@ -6,42 +6,35 @@ $ErrorActionPreference = "Stop"
 
     .DESCRIPTION
     This function only installs the linting dependencies not found on the GitHub workflow platforms.
-    Clang tools are not installed here and instead are installed in the function that uses them.
+    Ideally Cpp linting dependencies would also be installed here but due to installation complexities they are done within the
+    respective Cpp linting step.
+
+    .PARAMETER PathToLintersSubmodulesRoot
+    Specifies the path the to the root of the Linters submodule.
 
     .INPUTS
-    [string] Platform. The current GitHub workflow platform.
+    None.
 
     .OUTPUTS
     None.
 
     .EXAMPLE
     Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
-    Install-LintingDependencies -PathToLintersSubmodulesRoot "." -Platform "macos-latest" -InstallCppDependencies -Verbose
+    Install-LintingDependencies -PathToLintersSubmodulesRoot "." -Verbose
 #>
 
 function Install-LintingDependencies {
 
     [CmdletBinding()]
-    param
-    (
+    param(
         [Parameter(Position=0, Mandatory=$true)]
         [string]
-        $PathToLintersSubmodulesRoot,
-
-        [Parameter(Position=0, Mandatory=$true)]
-        [string]
-        $Platform,
-
-        [Parameter(Position=0, Mandatory=$true)]
-        [switch]
-        $InstallCppDependencies
+        $PathToLintersSubmodulesRoot
     )
 
     Write-Output "##[section]Running Install-LintingDependencies..."
     Write-Verbose "##[debug]Parameters:"
     Write-Verbose "##[debug]    PathToLintersSubmodulesRoot: $PathToLintersSubmodulesRoot"
-    Write-Verbose "##[debug]    Platform: $Platform"
-    Write-Verbose "##[debug]    InstallCppDependencies: $InstallCppDependencies"
 
     Set-Location -Path $PathToLintersSubmodulesRoot
 
@@ -50,31 +43,6 @@ function Install-LintingDependencies {
     npm install
 
     Assert-ExternalCommandError -ThrowError
-
-    if ($InstallCppDependencies) {
-
-        Write-Information "##[command]Installing doxygen..."
-
-        switch ($Platform) {
-            macos-latest {
-                & brew install doxygen
-            }
-
-            ubuntu-latest {
-                & sudo apt-get install doxygen
-            }
-
-            windows-latest {
-                & choco install doxygen.install -y
-            }
-
-            default {
-                Write-Error "##[error]Unsupported platform: $Platform"
-            }
-        }
-
-        Assert-ExternalCommandError -ThrowError
-    }
 
     Write-Output "##[section]All linting dependencies installed!"
 }

@@ -8,6 +8,9 @@ $InformationPreference = "Continue"
     .DESCRIPTION
     This function must be called immediately after the external function call.
 
+    .PARAMETER ThrowError
+    Specifies whether to throw an error if an error is detected. If no specified a boolean will be returned instead.
+
     .INPUTS
     None.
 
@@ -64,7 +67,6 @@ function Assert-ExternalCommandError {
     .OUTPUTS
     system.object[] A list of file paths (relative to the root of the repository).
 
-
     .EXAMPLE
     Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
     Get-AllFilePathsToTest -Verbose
@@ -93,21 +95,28 @@ function Get-AllFilePathsToTest {
     .DESCRIPTION
     None.
 
+    .PARAMETER DirectoryFilterType
+    Specifies whether to include or exclude the DirectoryNameFilterList in the search.
+
+    .PARAMETER DirectoryNameFilterList
+    Specifies the directory paths from the root of the repo to either include or exclude depending upon the value of
+    DirectoryFilterType.
+
+    .PARAMETER FileNameFilterType
+    Specifies whether to include or exclude the FileNameFilterList in the search.
+
+    .PARAMETER FileNameFilterList
+    Specifies the file names (without file extension) to either include or exclude depending upon the value of
+    FileNameFilterType.
+
+    .PARAMETER FileExtensionFilterType
+    Specifies whether to include or exclude the FileExtensionFilterList in the search.
+
+    .PARAMETER FileExtensionFilterList
+    Specifies the file extensions to either include or exclude depending upon the value of FileExtensionFilterType.
+
     .INPUTS
-    string DirectoryFilterType. Whether to include or exclude the DirectoryNameFilterList in the search.
-
-    system.object[] DirectoryNameFilterList. The directory paths from the root of the repo to either include or exclude
-    depending upon the value of DirectoryFilterType.
-
-    string FileNameFilterType. Whether to include or exclude the FileNameFilterList in the search.
-
-    system.object[] FileNameFilterList. The file names (without file extension) to either include or exclude depending upon the
-    value of FileNameFilterType.
-
-    string FileExtensionFilterType. Whether to include or exclude the FileExtensionFilterList in the search.
-
-    system.object[] FileExtensionFilterList. The file extensions to either include or exclude depending upon the value of
-    FileExtensionFilterType.
+    None.
 
     .OUTPUTS
     system.object[] A list of file paths (relative to the root of the repository).
@@ -246,10 +255,14 @@ function Get-FilteredFilePathsToTest {
     .DESCRIPTION
     Compare-Object was not sufficient as it disregards the order of the DifferenceObject.
 
-    .INPUTS
-    system.object[] ReferenceObject. Specifies an array of objects used as a reference for comparison.
+    .PARAMETER ReferenceObject
+    Specifies an array of objects used as a reference for comparison.
 
-    system.object[] DifferenceObject. Specifies the objects that are compared to the reference objects.
+    .PARAMETER DifferenceObject
+    Specifies the objects that are compared to the reference objects.
+
+    .INPUTS
+    None.
 
     .OUTPUTS
     system.object[] A list of error messages.
@@ -325,11 +338,14 @@ function Compare-ObjectExact {
     Intended to be used locally during development to manually check for linting issues before pushing a commit.
     Raises an error at the first occurrence of a linting error.
 
+    .PARAMETER FixClangTidyErrors
+    Specifies whether to use clang-tidy to automatically fix any fixable errors.
+
+    .PARAMETER FixClangFormatErrors
+    Specifies whether to use clang-format to automatically fix any fixable errors.
+
     .INPUTS
-
-    [switch] FixClangTidyErrors. Whether to use clang-tidy to automatically fix any fixable errors.
-
-    [switch] FixClangFormatErrors. Whether to use clang-format to automatically fix any fixable errors.
+    None.
 
     .OUTPUTS
     None.
@@ -395,10 +411,17 @@ function Test-CodeUsingAllLinters {
     CMake must be configured in the ./build/ directory as the 'compile_commands.json' file is needed by clang-tidy.
     Raises an error if linting errors found.
 
-    .INPUTS
-    [switch] FixClangTidyErrors. Whether to use clang-tidy to automatically fix any fixable errors.
+    .PARAMETER PathToLintersSubmodulesRoot
+    Specifies the path the to the root of the Linters submodule.
 
-    [switch] FixClangFormatErrors. Whether to use clang-format to automatically fix any fixable errors.
+    .PARAMETER FixClangTidyErrors
+    Specifies whether to use clang-tidy to automatically fix any fixable errors.
+
+    .PARAMETER FixClangFormatErrors
+    Specifies whether to use clang-format to automatically fix any fixable errors.
+
+    .INPUTS
+    None.
 
     .OUTPUTS
     None.
@@ -411,8 +434,7 @@ function Test-CodeUsingAllLinters {
 function Test-CodeUsingClangTools {
 
     [CmdletBinding()]
-    param
-    (
+    param(
         [Parameter(Position=0, Mandatory=$true)]
         [string]
         $PathToLintersSubmodulesRoot,
@@ -517,6 +539,12 @@ function Test-CodeUsingClangTools {
     .DESCRIPTION
     Raises an error if linting errors found.
 
+    .PARAMETER PathToLintersSubmodulesRoot
+    Specifies the path the to the root of the Linters submodule.
+
+    .PARAMETER PathBackToRepositoryRoot
+    Specifies the path need to return to the repository root from the Linters submodule.
+
     .INPUTS
     None.
 
@@ -531,8 +559,7 @@ function Test-CodeUsingClangTools {
 function Test-CodeUsingCSpell {
 
     [CmdletBinding()]
-    param
-    (
+    param(
         [Parameter(Position=0, Mandatory=$true)]
         [string]
         $PathToLintersSubmodulesRoot,
@@ -593,6 +620,12 @@ function Test-CodeUsingCSpell {
     .DESCRIPTION
     Raises an error if linting errors found.
 
+    .PARAMETER PathToLintersSubmodulesRoot
+    Specifies the path the to the root of the Linters submodule.
+
+    .PARAMETER PathBackToRepositoryRoot
+    Specifies the path need to return to the repository root from the Linters submodule.
+
     .INPUTS
     None.
 
@@ -607,8 +640,7 @@ function Test-CodeUsingCSpell {
 function Test-CodeUsingPrettier {
 
     [CmdletBinding()]
-    param
-    (
+    param(
         [Parameter(Position=0, Mandatory=$true)]
         [string]
         $PathToLintersSubmodulesRoot,
@@ -669,6 +701,9 @@ function Test-CodeUsingPrettier {
     .DESCRIPTION
     Raises an error if linting errors found.
 
+    .PARAMETER PathToLintersSubmodulesRoot
+    Specifies the path the to the root of the Linters submodule.
+
     .INPUTS
     None.
 
@@ -683,8 +718,7 @@ function Test-CodeUsingPrettier {
 function Test-CodeUsingPSScriptAnalyzer {
 
     [CmdletBinding()]
-    param
-    (
+    param(
         [Parameter(Position=0, Mandatory=$true)]
         [string]
         $PathToLintersSubmodulesRoot
@@ -1031,6 +1065,9 @@ function Test-CSpellConfiguration {
     .DESCRIPTION
     Assumes doxygen is already installed.
 
+    .PARAMETER ResetLocalGitChanges
+    Specifies whether to reset local git changes before comparing for doxygen documentation git differences.
+
     .INPUTS
     None.
 
@@ -1039,27 +1076,34 @@ function Test-CSpellConfiguration {
 
     .EXAMPLE
     Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
-    Test-DoxygenDocumentation -Verbose
+    Test-DoxygenDocumentation -ResetLocalGitChanges -Verbose
 #>
 function Test-DoxygenDocumentation {
 
     [CmdletBinding()]
-    param()
+    param(
+        [Parameter(Position=0, Mandatory=$false)]
+        [switch]
+        $ResetLocalGitChanges,
+    )
 
     Write-Verbose "##[debug]Running Test-DoxygenDocumentation..."
 
-    if (-Not (Test-Path -Path ./Doxyfile)) {
-        Write-Information "##[warning]No Doxyfile file found at current directory! Please check if this is expected!"
-        return
+    # if (-Not (Test-Path -Path ./Doxyfile)) {
+    #     Write-Information "##[warning]No Doxyfile file found at current directory! Please check if this is expected!"
+    #     return
+    # }
+
+    if ($ResetLocalGitChanges) {
+
+        Write-Information "##[command]Performing git clean..."
+        & git clean --force -d -x
+        Assert-ExternalCommandError -ThrowError
+
+        Write-Information "##[command]Performing git reset..."
+        git reset --hard
+        Assert-ExternalCommandError -ThrowError
     }
-
-    Write-Information "##[command]Performing git clean..."
-    & git clean --force -d -x
-    Assert-ExternalCommandError -ThrowError
-
-    Write-Information "##[command]Performing git reset..."
-    git reset --hard
-    Assert-ExternalCommandError -ThrowError
 
     Write-Information "##[command]Running doxygen..."
     & doxygen ./Doxyfile
