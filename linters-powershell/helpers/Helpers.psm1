@@ -1084,7 +1084,7 @@ function Test-DoxygenDocumentation {
     param(
         [Parameter(Position=0, Mandatory=$false)]
         [switch]
-        $ResetLocalGitChanges,
+        $ResetLocalGitChanges
     )
 
     Write-Verbose "##[debug]Running Test-DoxygenDocumentation..."
