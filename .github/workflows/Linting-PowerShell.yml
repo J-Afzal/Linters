@@ -149,7 +149,7 @@ jobs:
 
                   if [ ${{ matrix.os }} = windows-latest ]
                   then
-                    choco install doxygen.portable
+                    choco install doxygen.portable -y
                   fi
 
                   doxygen --version
