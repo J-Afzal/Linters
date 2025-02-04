@@ -1094,6 +1094,9 @@ function Test-DoxygenDocumentation {
         return
     }
 
+    Write-Verbose "##[debug]Using the following doxygen version..."
+    (doxygen --version) | ForEach-Object { "##[debug]$_" } | Write-Verbose
+
     if ($ResetLocalGitChanges) {
 
         Write-Information "##[command]Performing git clean..."
