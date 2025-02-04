@@ -153,3 +153,9 @@ jobs:
                   fi
 
                   pwsh -c "Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1; Test-DoxygenDocumentation -ResetLocalGitChanges -Verbose"
+
+            - uses: actions/upload-artifact@v4
+              with:
+                  name: doxygen-docs-${{ matrix.os }}
+                  path: ./docs/html/
+                  if-no-files-found: error
