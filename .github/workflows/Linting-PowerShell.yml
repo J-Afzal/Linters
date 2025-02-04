@@ -152,4 +152,4 @@ jobs:
                     choco install doxygen.portable -y
                   fi
 
-                  # pwsh -c "Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1; Test-DoxygenDocumentation -ResetLocalGitChanges -Verbose"
+                  pwsh -c "Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1; Test-DoxygenDocumentation -ResetLocalGitChanges -Verbose"
