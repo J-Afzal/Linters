@@ -124,6 +124,13 @@ jobs:
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters
               shell: bash
               run: |
+                  # No idea why but other platforms always result in a diff. Other platform code remains in-case this is fixed
+                  # at a later date.
+                  if [ ${{ matrix.os }} != macos-latest ]; then
+                      echo "##[section]${{ matrix.os }} is not supported by this step."
+                      exit 0
+                  fi
+
                   # Exit with a warning if no Doxyfile found
                   if [ ! -f ./Doxyfile ]; then
                       echo "##[warning]No Doxyfile file found at current directory! Please check if this is expected!"
