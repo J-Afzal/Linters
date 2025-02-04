@@ -1089,10 +1089,10 @@ function Test-DoxygenDocumentation {
 
     Write-Verbose "##[debug]Running Test-DoxygenDocumentation..."
 
-    # if (-Not (Test-Path -Path ./Doxyfile)) {
-    #     Write-Information "##[warning]No Doxyfile file found at current directory! Please check if this is expected!"
-    #     return
-    # }
+    if (-Not (Test-Path -Path ./Doxyfile)) {
+        Write-Information "##[warning]No Doxyfile file found at current directory! Please check if this is expected!"
+        return
+    }
 
     if ($ResetLocalGitChanges) {
 
