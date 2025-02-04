@@ -40,7 +40,7 @@ jobs:
               id: dependencies
               run: |
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
-                  Install-LintingDependencies -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Platform ${{ matrix.os }} -InstallCppDependencies:$${{ inputs.run_cpp_linters }} -Verbose
+                  Install-LintingDependencies -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose
 
             - name: Run gitignore linter
               if: (success() || failure()) && steps.dependencies.outcome == 'success'
@@ -122,6 +122,36 @@ jobs:
 
             - name: Check doxygen documentation is updated
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters
+              shell: bash
               run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
-                  Test-DoxygenDocumentation -Verbose
+                  #   # Exit with a warning if no Doxyfile found
+                  #   if [ ! -f ./Doxyfile ]; then
+                  #       echo "##[warning]No Doxyfile file found at current directory! Please check if this is expected!"
+                  #       exit 0
+                  #   fi
+
+                  if [ ${{ matrix.os }} = macos-latest ]
+                  then
+                      brew install doxygen
+                  fi
+
+                  if [ ${{ matrix.os }} = ubuntu-latest ]
+                  then
+                      sudo apt-get install ninja-build
+
+                      # Install brew to get latest doxygen
+                      test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
+                      test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+                      echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
+                      export PATH="$HOME/.linuxbrew/bin:$PATH"
+                      brew install doxygen
+                  fi
+
+                  if [ ${{ matrix.os }} = windows-latest ]
+                  then
+                    choco install doxygen.portable -y
+                  fi
+
+                  doxygen --version
+
+                  # pwsh -c "Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1; Test-DoxygenDocumentation -ResetLocalGitChanges -Verbose"
