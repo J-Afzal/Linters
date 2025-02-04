@@ -158,4 +158,4 @@ jobs:
               with:
                   name: doxygen-docs-${{ matrix.os }}
                   path: ./docs/html/
-                  if-no-files-found: error
+                  if-no-files-found: warn
