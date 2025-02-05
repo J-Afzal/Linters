@@ -15,7 +15,8 @@ jobs:
                 shell: pwsh
 
         steps:
-            - uses: actions/checkout@v4
+            - name: Checkout repository
+              uses: actions/checkout@v4
 
             - name: Create new release
               run: |

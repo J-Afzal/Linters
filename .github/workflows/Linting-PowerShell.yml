@@ -32,7 +32,8 @@ jobs:
                 shell: pwsh
 
         steps:
-            - uses: actions/checkout@v4
+            - name: Checkout repository
+              uses: actions/checkout@v4
               with:
                   submodules: true
 
@@ -161,9 +162,9 @@ jobs:
 
                   pwsh -c "Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1; Test-DoxygenDocumentation -ResetLocalGitChanges -Verbose"
 
-            - uses: actions/upload-artifact@v4
+            - name: Upload doxygen documentation
+              uses: actions/upload-artifact@v4
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters
               with:
                   name: doxygen-docs-${{ matrix.os }}
                   path: ./docs/html/
-                  if-no-files-found: warn
