@@ -473,13 +473,13 @@ function Test-CodeUsingClangTools {
     foreach ($file in $filesToTest) {
 
         Write-Information "##[command]Running clang-tidy against '$file'..."
-        (clang-tidy --config-file "$PathToLintersSubmodulesRoot/.clang-tidy" $file -p ./build 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
+        (clang-tidy --config-file $PathToLintersSubmodulesRoot/.clang-tidy $file -p ./build 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
 
         if (Assert-ExternalCommandError) {
 
             if ($FixClangTidyErrors) {
                 Write-Verbose "##[debug]Fixing clang-tidy issues in '$file'..."
-                (clang-tidy --config-file "$PathToLintersSubmodulesRoot/.clang-tidy" --fix $file -p ./build 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
+                (clang-tidy --config-file $PathToLintersSubmodulesRoot/.clang-tidy --fix $file -p ./build 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
 
                 if (Assert-ExternalCommandError) {
                     Write-Verbose "##[debug]clang-tidy issues still exist in '$file'..."
@@ -575,7 +575,7 @@ function Test-CodeUsingCSpell {
     Write-Verbose "##[debug]    PathBackToRepositoryRoot: $PathBackToRepositoryRoot"
 
     Write-Information "##[command]Retrieving all files to test against cspell..."
-    $filesToTest = Get-FilteredFilePathsToTest -DirectoryFilterType "Exclude" -DirectoryNameFilterList @("docs/html") -FileNameFilterType "Exclude" -FileNameFilterList @("package-lock") -FileExtensionFilterType "Exclude" -FileExtensionFilterList @("ico", "png")
+    $filesToTest = Get-FilteredFilePathsToTest -DirectoryFilterType "Exclude" -DirectoryNameFilterList @("docs/html") -FileNameFilterType "Exclude" -FileNameFilterList @("package-lock") -FileExtensionFilterType "Exclude" -FileExtensionFilterList @("ico", "png", "gif", "mp4", "weights")
 
     if ($null -eq $filesToTest) {
         Write-Information "##[warning]No files found to lint for cspell! Please check if this is expected!"
@@ -1001,7 +1001,7 @@ function Test-CSpellConfiguration {
 
     Write-Verbose "##[debug]Retrieving all files to check..."
     # Same file list as found in Test-CodeUsingCSpell but also exclude cspell.yml (assumes cspell.yml is the only file with a file name of cspell)
-    $allFilesToCheck = @(Get-FilteredFilePathsToTest -DirectoryFilterType "Exclude" -DirectoryNameFilterList @("docs/html") -FileNameFilterType "Exclude" -FileNameFilterList @("cspell", "package-lock") -FileExtensionFilterType "Exclude" -FileExtensionFilterList @("ico", "png"))
+    $allFilesToCheck = @(Get-FilteredFilePathsToTest -DirectoryFilterType "Exclude" -DirectoryNameFilterList @("docs/html") -FileNameFilterType "Exclude" -FileNameFilterList @("cspell", "package-lock") -FileExtensionFilterType "Exclude" -FileExtensionFilterList @("ico", "png", "gif", "mp4", "weights"))
 
     [Collections.Generic.List[String]] $redundantCSpellWords = $cspellWords
     [Collections.Generic.List[String]] $redundantCSpellIgnoreWords = $cspellIgnoreWords
