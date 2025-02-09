@@ -97,7 +97,7 @@ jobs:
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters
               run: |
                   # Exit with a warning if no CMakeLists.txt found
-                  if (-Not Test-Path -LiteralPath ./CMakeLists.txt) {
+                  if (-Not (Test-Path -LiteralPath ./CMakeLists.txt)) {
                       Write-Information "##[warning]No CMakeLists.txt file found at current directory! Please check if this is expected!"
                   }
 

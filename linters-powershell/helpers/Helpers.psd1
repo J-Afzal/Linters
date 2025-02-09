@@ -29,6 +29,7 @@
         'Test-CodeUsingPrettier',
         'Test-CodeUsingPSScriptAnalyzer',
         'Test-CSpellConfiguration',
+        'Test-DoxygenDocumentation',
         'Test-GitAttributesFile',
         'Test-GitIgnoreFile',
         'Test-PrettierIgnoreFile'
