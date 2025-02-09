@@ -81,8 +81,6 @@ function Install-LintingDependencies {
 
             ubuntu-latest {
                 sudo apt-get install ninja-build
-                sudo apt-get install wslu
-                & ./.github/workflows/helpers/install-brew-on-ubuntu.sh
                 brew install llvm
                 brew install doxygen
             }

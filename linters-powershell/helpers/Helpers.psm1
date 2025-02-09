@@ -619,13 +619,25 @@ function Test-CodeUsingClangTools {
     foreach ($file in $filesToTest) {
 
         Write-Information "##[command]Running clang-tidy against '$file'..."
-        (clang-tidy --config-file $PathToLintersSubmodulesRoot/.clang-tidy $file -p ./build 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
+        if ($Platform -eq "macos-latest") {
+            (/opt/homebrew/opt/llvm/bin/clang-tidy --config-file $PathToLintersSubmodulesRoot/.clang-tidy $file -p ./build 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
+        }
+
+        else {
+            (clang-tidy --config-file $PathToLintersSubmodulesRoot/.clang-tidy $file -p ./build 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
+        }
 
         if (Assert-ExternalCommandError) {
 
             if ($FixClangTidyErrors) {
                 Write-Verbose "##[debug]Fixing clang-tidy issues in '$file'..."
-                (clang-tidy --config-file $PathToLintersSubmodulesRoot/.clang-tidy --fix $file -p ./build 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
+                if ($Platform -eq "macos-latest") {
+                    (/opt/homebrew/opt/llvm/bin/clang-tidy --config-file $PathToLintersSubmodulesRoot/.clang-tidy --fix $file -p ./build 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
+                }
+
+                else {
+                    (clang-tidy --config-file $PathToLintersSubmodulesRoot/.clang-tidy --fix $file -p ./build 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
+                }
 
                 if (Assert-ExternalCommandError) {
                     Write-Verbose "##[debug]clang-tidy issues still exist in '$file'..."
@@ -643,13 +655,25 @@ function Test-CodeUsingClangTools {
         }
 
         Write-Information "##[command]Running clang-format against '$file'..."
-        (clang-format --style=file:$PathToLintersSubmodulesRoot/.clang-format --Werror --dry-run $file 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
+        if ($Platform -eq "macos-latest") {
+            (/opt/homebrew/opt/llvm/bin/clang-format --style=file:$PathToLintersSubmodulesRoot/.clang-format --Werror --dry-run $file 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
+        }
+
+        else {
+            (clang-format --style=file:$PathToLintersSubmodulesRoot/.clang-format --Werror --dry-run $file 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
+        }
 
         if (Assert-ExternalCommandError) {
 
             if ($FixClangFormatErrors) {
                 Write-Verbose "##[debug]Fixing clang-format issues in '$file'..."
-                (clang-format --style=file:$PathToLintersSubmodulesRoot/.clang-format --Werror --i $file 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
+                if ($Platform -eq "macos-latest") {
+                    (/opt/homebrew/opt/llvm/bin/clang-format --style=file:$PathToLintersSubmodulesRoot/.clang-format --Werror --i $file 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
+                }
+
+                else {
+                    (clang-format --style=file:$PathToLintersSubmodulesRoot/.clang-format --Werror --i $file 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
+                }
 
                 if (Assert-ExternalCommandError) {
                     Write-Verbose "##[debug]clang-format issues still exist in '$file'..."

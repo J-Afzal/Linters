@@ -37,6 +37,11 @@ jobs:
               with:
                   submodules: true
 
+            - name: Install brew on ubuntu-latest
+              if: ${{ matrix.os }} == 'ubuntu-latest'
+              shell: bash
+              run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
             - name: Install linting dependencies
               id: dependencies
               run: |
@@ -82,14 +87,6 @@ jobs:
             - name: Run clang tools
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters
               run: |
-                  # TODO: move this to within the function
-
-                  if ("${{ matrix.os }}" -eq "macos-latest") {
-                      & ${{ inputs.path_to_linters_submodule_root }}/.github/workflows/helpers/override-apple-clang-on-macos.sh
-                      clang-tidy --version
-                      clang-format --version
-                  }
-
                   # Exit with a warning if no CMakeLists.txt found
                   if (-Not (Test-Path -LiteralPath ./CMakeLists.txt)) {
                       Write-Information "##[warning]No CMakeLists.txt file found at current directory! Please check if this is expected!"
@@ -102,10 +99,6 @@ jobs:
                       Import-Module ./modules/Build.psd1
                       Build-CppCodeUsingCMake -Platform ${{ matrix.os }} -BuildType Release -BuildDirectory build -Parallel 8 -Verbose
                       Assert-ExternalCommandError -ThrowError
-
-                      if ("${{ matrix.os }}" -eq "macos-latest") {
-                          & ${{ inputs.path_to_linters_submodule_root }}/.github/workflows/helpers/override-apple-clang-on-macos.sh
-                      }
 
                       Test-CodeUsingClangTools -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose
                   }
