@@ -77,14 +77,12 @@ function Install-LintingDependencies {
                 brew install ninja
                 brew install llvm
                 brew install doxygen
-
-                # sh ./.github/workflows/helpers/override-apple-clang-on-macos.sh - POST STEP
             }
 
             ubuntu-latest {
-                # sh ./.github/workflows/helpers/install-brew-on-ubuntu.sh - PRE STEP
-
                 sudo apt-get install ninja-build
+
+                & ./.github/workflows/helpers/install-brew-on-ubuntu.sh
                 brew install llvm
                 brew install doxygen
             }

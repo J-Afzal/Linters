@@ -37,25 +37,11 @@ jobs:
               with:
                   submodules: true
 
-            - name: Install brew on ubuntu-latest
-              if: ${{ matrix.os }} == 'ubuntu-latest'
-              shell: bash
-              run: |
-                  chmod +x ./${{ inputs.path_to_linters_submodule_root }}/.github/workflows/helpers/install-brew-on-ubuntu.sh
-                  ./${{ inputs.path_to_linters_submodule_root }}/.github/workflows/helpers/install-brew-on-ubuntu.sh
-
             - name: Install linting dependencies
               id: dependencies
               run: |
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
                   Install-LintingDependencies -Platform ${{ matrix.os }} -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -PathBackToRepositoryRoot ${{ inputs.path_back_to_repository_root }} -InstallCppLintingDependencies -Verbose
-
-            - name: Override apple clang path
-              if: ${{ matrix.os }} == 'macos-latest'
-              shell: bash
-              run: |
-                  chmod +x ./${{ inputs.path_to_linters_submodule_root }}/.github/workflows/helpers/override-apple-clang-on-macos.sh
-                  ./${{ inputs.path_to_linters_submodule_root }}/.github/workflows/helpers/override-apple-clang-on-macos.sh
 
             - name: Run gitignore linter
               if: (success() || failure()) && steps.dependencies.outcome == 'success'
@@ -128,8 +114,8 @@ jobs:
 
                   ninja --version
                   doxygen --version
-                  clang-tidy --version
-                  clang-format --version
+                  /opt/homebrew/opt/llvm/bin/clang-tidy --version
+                  /opt/homebrew/opt/llvm/bin/clang-format --version
 
             - name: Upload doxygen documentation
               uses: actions/upload-artifact@v4
