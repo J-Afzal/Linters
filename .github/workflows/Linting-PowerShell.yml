@@ -126,6 +126,11 @@ jobs:
                       Test-DoxygenDocumentation -Verbose
                   }
 
+                  ninja --version
+                  doxygen --version
+                  clang-tidy --version
+                  clang-format --version
+
             - name: Upload doxygen documentation
               uses: actions/upload-artifact@v4
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters
