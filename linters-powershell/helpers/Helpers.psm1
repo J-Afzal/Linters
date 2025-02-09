@@ -1130,8 +1130,8 @@ function Test-CSpellConfiguration {
 
     # Add package-lock.json and re-sort gitattributes
     [Collections.Generic.List[String]] $cspellIgnorePathsList = $cspellIgnorePaths
-    $ignore = $cspellIgnorePathsList.Remove("package-lock.json")
-    $ignore = $cspellIgnorePathsList.Remove("docs/html/")
+    $cspellIgnorePathsList.Remove("package-lock.json") | Out-Null
+    $cspellIgnorePathsList.Remove("docs/html/") | Out-Null
 
     if (Compare-ObjectExact -ReferenceObject ($gitignoreFileContents | Sort-Object) -DifferenceObject $cspellIgnorePathsList) {
         $lintingErrors += @{lineNumber = "-"; line = "-"; errorMessage = "'ignorePaths' does not match the entries in .gitignore." }
