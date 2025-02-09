@@ -38,7 +38,7 @@ jobs:
                   submodules: true
 
             - name: Install brew on ubuntu-latest
-              if: ${{ matrix.os }} == ubuntu-latest
+              if: ${{ matrix.os }} == 'ubuntu-latest'
               shell: bash
               run: |
                   chmod +x ./${{ inputs.path_to_linters_submodule_root }}/.github/workflows/helpers/install-brew-on-ubuntu.sh
@@ -51,7 +51,7 @@ jobs:
                   Install-LintingDependencies -Platform ${{ matrix.os }} -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -PathBackToRepositoryRoot ${{ inputs.path_back_to_repository_root }} -InstallCppLintingDependencies -Verbose
 
             - name: Override apple clang path
-              if: ${{ matrix.os }} == macos-latest
+              if: ${{ matrix.os }} == 'macos-latest'
               shell: bash
               run: |
                   chmod +x ./${{ inputs.path_to_linters_submodule_root }}/.github/workflows/helpers/override-apple-clang-on-macos.sh
