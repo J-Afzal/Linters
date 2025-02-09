@@ -13,6 +13,12 @@ $InformationPreference = "Continue"
     .PARAMETER PathToLintersSubmodulesRoot
     Specifies the path the to the root of the Linters submodule.
 
+    .PARAMETER PathBackToRepositoryRoot
+    Specifies the path need to return to the repository root from the Linters submodule.
+
+    .PARAMETER InstallCppLintingDependencies
+    Whether to install C++ linting dependencies.
+
     .INPUTS
     None.
 
@@ -21,7 +27,8 @@ $InformationPreference = "Continue"
 
     .EXAMPLE
     Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
-    Install-LintingDependencies -PathToLintersSubmodulesRoot "." -Verbose
+    Install-LintingDependencies -Platform macos-latest -PathToLintersSubmodulesRoot "./submodules/Linters" -PathBackToRepositoryRoot "." -InstallCppLintingDependencies -Verbose
+
 #>
 
 function Install-LintingDependencies {
@@ -29,21 +36,79 @@ function Install-LintingDependencies {
     [CmdletBinding()]
     param(
         [Parameter(Position = 0, Mandatory = $true)]
+        [ValidateSet("macos-latest", "ubuntu-latest", "windows-latest")]
         [string]
-        $PathToLintersSubmodulesRoot
+        $Platform,
+
+        [Parameter(Position = 0, Mandatory = $true)]
+        [string]
+        $PathToLintersSubmodulesRoot,
+
+        [Parameter(Position = 1, Mandatory = $true)]
+        [string]
+        $PathBackToRepositoryRoot,
+
+        [Parameter(Position = 2, Mandatory = $false)]
+        [switch]
+        $InstallCppLintingDependencies = $false
     )
 
     Write-Verbose "##[debug]Running Install-LintingDependencies..."
     Write-Verbose "##[debug]Parameters:"
+    Write-Verbose "##[debug]    Platform: $Platform"
     Write-Verbose "##[debug]    PathToLintersSubmodulesRoot: $PathToLintersSubmodulesRoot"
+    Write-Verbose "##[debug]    PathBackToRepositoryRoot: $PathBackToRepositoryRoot"
+    Write-Verbose "##[debug]    InstallCppLintingDependencies: $InstallCppLintingDependencies"
 
-    Set-Location -Path $PathToLintersSubmodulesRoot
+    Write-Information "##[command]Changing directory to Linters submodule folder..."
+    Set-Location -LiteralPath $PathToLintersSubmodulesRoot
 
-    Write-Information "##[command]Installing npm dependencies..."
+    try {
+        Write-Information "##[command]Installing npm dependencies..."
+        npm install
+        Assert-ExternalCommandError -ThrowError
 
-    npm install
+        if (-Not $InstallCppLintingDependencies) {
+            return
+        }
 
-    Assert-ExternalCommandError -ThrowError
+        switch ($Platform) {
+            macos-latest {
+                brew install ninja
+                brew install llvm
+                brew install doxygen
+
+                # sh ./.github/workflows/helpers/override-apple-clang-on-macos.sh - POST STEP
+            }
+
+            ubuntu-latest {
+                # sh ./.github/workflows/helpers/install-brew-on-ubuntu.sh - PRE STEP
+
+                sudo apt-get install ninja-build
+                brew install llvm
+                brew install doxygen
+            }
+
+            windows-latest {
+                choco install ninja -y
+                choco upgrade llvm -y
+                choco install doxygen.portable -y
+            }
+
+            default {
+                Write-Error "##[error]'$Platform' is an unsupported platform."
+            }
+        }
+    }
+
+    catch {
+        throw
+    }
+
+    finally {
+        Write-Information "##[command]Changing directory to repository root..."
+        Set-Location -LiteralPath $PathBackToRepositoryRoot
+    }
 
     Write-Information "##[section]All linting dependencies installed!"
 }

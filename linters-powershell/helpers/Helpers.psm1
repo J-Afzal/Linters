@@ -30,7 +30,7 @@ function Assert-ExternalCommandError {
     param(
         [Parameter(Position = 0, Mandatory = $false)]
         [switch]
-        $ThrowError
+        $ThrowError = $false
     )
 
     Write-Verbose "##[debug]Running Assert-ExternalCommandError..."
@@ -80,12 +80,12 @@ function Get-AllBinaryFiles {
 
     Write-Verbose "##[debug]Running Get-AllBinaryFiles..."
 
-    if (-Not (Test-Path -Path ./.gitattributes)) {
+    if (-Not (Test-Path -LiteralPath ./.gitattributes)) {
         Write-Information "##[warning]No .gitattributes file found at current directory! Please check if this is expected!"
         return
     }
 
-    $gitattributesFileContents = @(Get-Content -Path ./.gitattributes)
+    $gitattributesFileContents = @(Get-Content -LiteralPath ./.gitattributes)
     $binaryFileExtensions = @()
     $binaryFileNames = @()
 
@@ -192,7 +192,7 @@ function Get-AllFilePathsToTest {
     param(
         [Parameter(Position = 0, Mandatory = $false)]
         [switch]
-        $ExcludeBinaryFiles
+        $ExcludeBinaryFiles = $false
     )
 
     Write-Verbose "##[debug]Running Get-AllFilePathsToTest..."
@@ -304,7 +304,7 @@ function Get-FilteredFilePathsToTest {
         [Parameter(Position = 6, Mandatory = $false, ParameterSetName = "FileNameAndFileExtensionSearch")]
         [Parameter(Position = 6, Mandatory = $false, ParameterSetName = "FullSearch")]
         [switch]
-        $ExcludeBinaryFiles
+        $ExcludeBinaryFiles = $false
     )
 
     Write-Verbose "##[debug]Running Get-FilteredFilePathsToTest..."
@@ -511,11 +511,11 @@ function Test-CodeUsingAllLinters {
 
         [Parameter(Position = 2, Mandatory = $false)]
         [switch]
-        $FixClangTidyErrors,
+        $FixClangTidyErrors = $false,
 
         [Parameter(Position = 3, Mandatory = $false)]
         [switch]
-        $FixClangFormatErrors
+        $FixClangFormatErrors = $false
     )
 
     Write-Verbose "##[debug]Running Test-CodeUsingAllLinting..."
@@ -583,11 +583,11 @@ function Test-CodeUsingClangTools {
 
         [Parameter(Position = 1, Mandatory = $false)]
         [switch]
-        $FixClangTidyErrors,
+        $FixClangTidyErrors = $false,
 
         [Parameter(Position = 2, Mandatory = $false)]
         [switch]
-        $FixClangFormatErrors
+        $FixClangFormatErrors = $false
     )
 
     Write-Verbose "##[debug]Running Test-CodeUsingClangTools..."
@@ -606,9 +606,11 @@ function Test-CodeUsingClangTools {
 
     Write-Verbose "##[debug]Using the following clang-tidy version..."
     (clang-tidy --version) | ForEach-Object { Write-Verbose "##[debug]$_" }
+    Assert-ExternalCommandError -ThrowError
 
     Write-Verbose "##[debug]Using the following clang-format version..."
     (clang-format --version) | ForEach-Object { Write-Verbose "##[debug]$_" }
+    Assert-ExternalCommandError -ThrowError
 
     $filesWithErrors = @()
 
@@ -729,7 +731,7 @@ function Test-CodeUsingCSpell {
     }
 
     Write-Information "##[command]Changing directory to Linters submodule folder..."
-    Set-Location -Path $PathToLintersSubmodulesRoot
+    Set-Location -LiteralPath $PathToLintersSubmodulesRoot
 
     try {
         Write-Verbose "##[debug]Using the following cspell version..."
@@ -755,7 +757,7 @@ function Test-CodeUsingCSpell {
 
     finally {
         Write-Information "##[command]Changing directory to repository root..."
-        Set-Location -Path $PathBackToRepositoryRoot
+        Set-Location -LiteralPath $PathBackToRepositoryRoot
     }
 
     if ($filesWithErrors.Length -gt 0) {
@@ -820,7 +822,7 @@ function Test-CodeUsingPrettier {
     }
 
     Write-Information "##[command]Changing directory to Linters submodule folder..."
-    Set-Location -Path $PathToLintersSubmodulesRoot
+    Set-Location -LiteralPath $PathToLintersSubmodulesRoot
 
     try {
         Write-Verbose "##[debug]Using the following prettier version..."
@@ -846,7 +848,7 @@ function Test-CodeUsingPrettier {
 
     finally {
         Write-Information "##[command]Changing directory to repository root..."
-        Set-Location -Path $PathBackToRepositoryRoot
+        Set-Location -LiteralPath $PathBackToRepositoryRoot
     }
 
     if ($filesWithErrors.Length -gt 0) {
@@ -964,13 +966,13 @@ function Test-CSpellConfiguration {
 
     Write-Verbose "##[debug]Running Test-CSpellConfiguration..."
 
-    if (-Not (Test-Path -Path ./cspell.yml)) {
+    if (-Not (Test-Path -LiteralPath ./cspell.yml)) {
         Write-Information "##[warning]No cspell.yml file found at current directory! Please check if this is expected!"
         return
     }
 
     Write-Information "##[command]Retrieving contents of cspell.yml..."
-    $cspellFileContents = @(Get-Content -Path ./cspell.yml)
+    $cspellFileContents = @(Get-Content -LiteralPath ./cspell.yml)
 
     Write-Information "##[command]Checking cspell.yml file..."
     $lintingErrors = @()
@@ -1117,13 +1119,13 @@ function Test-CSpellConfiguration {
 
     Write-Information "##[command]Checking 'ignorePaths' matches the .gitignore file..."
 
-    if (-Not (Test-Path -Path ./.gitignore)) {
+    if (-Not (Test-Path -LiteralPath ./.gitignore)) {
         Write-Information "##[warning]No .gitignore file found at current directory! Please check if this is expected!"
         $gitignoreFileContents = @()
     }
 
     else {
-        $gitignoreFileContents = @(Get-Content -Path ./.gitignore)
+        $gitignoreFileContents = @(Get-Content -LiteralPath ./.gitignore)
     }
 
     # Add package-lock.json and re-sort gitattributes
@@ -1176,7 +1178,7 @@ function Test-CSpellConfiguration {
 
         Write-Verbose "##[debug]Reading contents of '$file'..."
 
-        $fileContents = @(Get-Content -Path $file)
+        $fileContents = @(Get-Content -LiteralPath $file)
 
         foreach ($line in $fileContents) {
 
@@ -1250,12 +1252,14 @@ function Test-DoxygenDocumentation {
     param(
         [Parameter(Position = 0, Mandatory = $false)]
         [switch]
-        $ResetLocalGitChanges
+        $ResetLocalGitChanges = $false
     )
 
     Write-Verbose "##[debug]Running Test-DoxygenDocumentation..."
 
-    if (-Not (Test-Path -Path ./Doxyfile)) {
+    if
+
+    if (-Not (Test-Path -LiteralPath ./Doxyfile)) {
         Write-Information "##[warning]No Doxyfile file found at current directory! Please check if this is expected!"
         return
     }
@@ -1317,13 +1321,13 @@ function Test-GitAttributesFile {
 
     Write-Verbose "##[debug]Running Test-GitattributesFile..."
 
-    if (-Not (Test-Path -Path ./.gitattributes)) {
+    if (-Not (Test-Path -LiteralPath ./.gitattributes)) {
         Write-Information "##[warning]No .gitattributes file found at current directory! Please check if this is expected!"
         return
     }
 
     Write-Information "##[command]Retrieving contents of .gitattributes..."
-    $gitattributesFileContents = @(Get-Content -Path ./.gitattributes)
+    $gitattributesFileContents = @(Get-Content -LiteralPath ./.gitattributes)
 
     Write-Information "##[command]Retrieving all unique file extensions and unique files without a file extension..."
     $gitTrackedFiles = git ls-files -c | ForEach-Object { if (-Not $_.StartsWith("submodules")) { $_ } } | Split-Path -Leaf # Exclude submodules
@@ -1494,13 +1498,13 @@ function Test-GitIgnoreFile {
 
     Write-Verbose "##[debug]Running Test-GitIgnoreFile..."
 
-    if (-Not (Test-Path -Path ./.gitignore)) {
+    if (-Not (Test-Path -LiteralPath ./.gitignore)) {
         Write-Information "##[warning]No .gitignore file found at current directory! Please check if this is expected!"
         return
     }
 
     Write-Information "##[command]Retrieving contents of .gitignore..."
-    $gitignoreFileContents = @(Get-Content -Path ./.gitignore)
+    $gitignoreFileContents = @(Get-Content -LiteralPath ./.gitignore)
 
     Write-Information "##[command]Checking formatting of .gitignore file..."
     $lintingErrors = @()
