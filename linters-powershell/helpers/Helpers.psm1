@@ -1257,8 +1257,6 @@ function Test-DoxygenDocumentation {
 
     Write-Verbose "##[debug]Running Test-DoxygenDocumentation..."
 
-    if
-
     if (-Not (Test-Path -LiteralPath ./Doxyfile)) {
         Write-Information "##[warning]No Doxyfile file found at current directory! Please check if this is expected!"
         return
