@@ -1,4 +1,5 @@
 $ErrorActionPreference = "Stop"
+$InformationPreference = "Continue"
 
 <#
     .SYNOPSIS
@@ -27,22 +28,22 @@ function Install-LintingDependencies {
 
     [CmdletBinding()]
     param(
-        [Parameter(Position=0, Mandatory=$true)]
+        [Parameter(Position = 0, Mandatory = $true)]
         [string]
         $PathToLintersSubmodulesRoot
     )
 
-    Write-Output "##[section]Running Install-LintingDependencies..."
+    Write-Verbose "##[debug]Running Install-LintingDependencies..."
     Write-Verbose "##[debug]Parameters:"
     Write-Verbose "##[debug]    PathToLintersSubmodulesRoot: $PathToLintersSubmodulesRoot"
 
     Set-Location -Path $PathToLintersSubmodulesRoot
 
-    Write-Output "##[section]Installing npm dependencies..."
+    Write-Information "##[command]Installing npm dependencies..."
 
     npm install
 
     Assert-ExternalCommandError -ThrowError
 
-    Write-Output "##[section]All linting dependencies installed!"
+    Write-Information "##[section]All linting dependencies installed!"
 }

@@ -28,7 +28,7 @@ function Assert-ExternalCommandError {
     [CmdletBinding()]
     [OutputType([system.boolean])]
     param(
-        [Parameter(Position=0, Mandatory=$false)]
+        [Parameter(Position = 0, Mandatory = $false)]
         [switch]
         $ThrowError
     )
@@ -56,10 +56,123 @@ function Assert-ExternalCommandError {
 
 <#
     .SYNOPSIS
+    Gets all git tracked binary files.
+
+    .DESCRIPTION
+    Uses .gitattributes 'binary' entries to determine which file types are to be considered binary.
+
+    .INPUTS
+    None.
+
+    .OUTPUTS
+    None.
+
+    .EXAMPLE
+    Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
+    Get-AllBinaryFiles -Verbose
+#>
+
+function Get-AllBinaryFiles {
+
+    [CmdletBinding()]
+    [OutputType([system.object[]])]
+    param()
+
+    Write-Verbose "##[debug]Running Get-AllBinaryFiles..."
+
+    if (-Not (Test-Path -Path ./.gitattributes)) {
+        Write-Information "##[warning]No .gitattributes file found at current directory! Please check if this is expected!"
+        return
+    }
+
+    $gitattributesFileContents = @(Get-Content -Path ./.gitattributes)
+    $binaryFileExtensions = @()
+    $binaryFileNames = @()
+
+    foreach ($currentLine in $gitattributesFileContents) {
+
+        # File extensions with or without * wildcard
+        if ($currentLine -Match "^\*?\.[a-z0-9-]+ +binary$") {
+
+            $found = $currentLine -Match "\.[a-z0-9-]+"
+
+            if ($found) {
+                $binaryFileExtensions += $matches[0]
+            }
+
+            else {
+                Write-Information "##[warning]'$currentLine' matched as a file extension but failed to extract."
+            }
+        }
+
+        # Files without an extension
+        if ($currentLine -Match "^[a-zA-Z0-9-]+ +binary$") {
+
+            $found = $currentLine -Match "^[a-zA-Z0-9-]+"
+
+            if ($found) {
+                $binaryFileNames += $matches[0]
+            }
+
+            else {
+                Write-Information "##[warning]'$currentLine' matched as a file without an extension but failed to extract."
+            }
+        }
+    }
+
+    $allFiles = git ls-files -c
+    Assert-ExternalCommandError -ThrowError
+
+    $allBinaryFiles = @()
+
+    foreach ($file in $allFiles) {
+
+        # Check file extensions
+        $fileExtensionMatched = $false
+
+        foreach ($binaryFileExtension in $binaryFileExtensions) {
+            if ($file.EndsWith($binaryFileExtension)) {
+                $fileExtensionMatched = $true
+                break
+            }
+        }
+
+        if ($fileExtensionMatched) {
+            $allBinaryFiles += $file
+            continue
+        }
+
+        # Otherwise check file names
+        $fileNameMatched = $false
+
+        foreach ($binaryFileName in $binaryFileNames) {
+            if ($file.EndsWith($binaryFileName)) {
+                $fileNameMatched = $true
+                break
+            }
+        }
+
+        if ($fileNameMatched) {
+            $allBinaryFiles += $file
+            continue
+        }
+    }
+
+    Write-Verbose "##[debug]Returning:"
+    $allBinaryFiles | ForEach-Object { Write-Verbose "##[debug]    $_" }
+
+    return $allBinaryFiles
+}
+
+<#
+    .SYNOPSIS
     Gets all git tracked files.
 
     .DESCRIPTION
     None.
+
+    .PARAMETER ExcludeBinaryFiles
+    Specifies whether to exclude binary files as defined in .gitattributes.
 
     .INPUTS
     None.
@@ -69,18 +182,24 @@ function Assert-ExternalCommandError {
 
     .EXAMPLE
     Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
-    Get-AllFilePathsToTest -Verbose
+    Get-AllFilePathsToTest -ExcludeBinaryFiles -Verbose
 #>
 
 function Get-AllFilePathsToTest {
 
     [CmdletBinding()]
     [OutputType([system.object[]])]
-    param()
+    param(
+        [Parameter(Position = 0, Mandatory = $false)]
+        [switch]
+        $ExcludeBinaryFiles
+    )
 
     Write-Verbose "##[debug]Running Get-AllFilePathsToTest..."
+    Write-Verbose "##[debug]Parameters:"
+    Write-Verbose "##[debug]    ExcludeBinaryFiles: $ExcludeBinaryFiles"
 
-    $allFilesToTest = Get-FilteredFilePathsToTest -DirectoryFilterType "Exclude" -DirectoryNameFilterList @("") -FileNameFilterType "Exclude" -FileNameFilterList @("") -FileExtensionFilterType "Exclude" -FileExtensionFilterList @("")
+    $allFilesToTest = Get-FilteredFilePathsToTest -DirectoryFilterType "Exclude" -DirectoryNameFilterList @("nothing") -FileNameFilterType "Exclude" -FileNameFilterList @("nothing") -FileExtensionFilterType "Exclude" -FileExtensionFilterList @("nothing") -ExcludeBinaryFiles:$ExcludeBinaryFiles
 
     Write-Verbose "##[debug]Returning:"
     $allFilesToTest | ForEach-Object { Write-Verbose "##[debug]    $_" }
@@ -115,6 +234,9 @@ function Get-AllFilePathsToTest {
     .PARAMETER FileExtensionFilterList
     Specifies the file extensions to either include or exclude depending upon the value of FileExtensionFilterType.
 
+    .PARAMETER ExcludeBinaryFiles
+    Specifies whether to exclude binary files as defined in .gitattributes.
+
     .INPUTS
     None.
 
@@ -134,42 +256,55 @@ function Get-FilteredFilePathsToTest {
     [CmdletBinding()]
     [OutputType([system.object[]])]
     param(
-        [Parameter(Position=0, Mandatory=$false, ParameterSetName="DirectorySearch")]
-        [Parameter(Position=0, Mandatory=$false, ParameterSetName="FullSearch")]
+        [Parameter(Position = 0, Mandatory = $false, ParameterSetName = "DirectorySearch")]
+        [Parameter(Position = 0, Mandatory = $false, ParameterSetName = "DirectoryAndFileNameSearch")]
+        [Parameter(Position = 0, Mandatory = $false, ParameterSetName = "FullSearch")]
         [ValidateSet("Include", "Exclude")]
         [string]
         $DirectoryFilterType,
 
-        [Parameter(Position=1, Mandatory=$true, ParameterSetName="DirectorySearch")]
-        [Parameter(Position=1, Mandatory=$true, ParameterSetName="FullSearch")]
+        [Parameter(Position = 1, Mandatory = $true, ParameterSetName = "DirectorySearch")]
+        [Parameter(Position = 1, Mandatory = $true, ParameterSetName = "DirectoryAndFileNameSearch")]
+        [Parameter(Position = 1, Mandatory = $true, ParameterSetName = "FullSearch")]
         [system.object[]]
         $DirectoryNameFilterList,
 
-        [Parameter(Position=2, Mandatory=$false, ParameterSetName="FileNameSearch")]
-        [Parameter(Position=2, Mandatory=$false, ParameterSetName="FileNameAndFileExtensionSearch")]
-        [Parameter(Position=2, Mandatory=$false, ParameterSetName="FullSearch")]
+        [Parameter(Position = 2, Mandatory = $false, ParameterSetName = "FileNameSearch")]
+        [Parameter(Position = 2, Mandatory = $false, ParameterSetName = "DirectoryAndFileNameSearch")]
+        [Parameter(Position = 2, Mandatory = $false, ParameterSetName = "FileNameAndFileExtensionSearch")]
+        [Parameter(Position = 2, Mandatory = $false, ParameterSetName = "FullSearch")]
         [ValidateSet("Include", "Exclude")]
         [string]
         $FileNameFilterType,
 
-        [Parameter(Position=3, Mandatory=$true, ParameterSetName="FileNameSearch")]
-        [Parameter(Position=3, Mandatory=$true, ParameterSetName="FileNameAndFileExtensionSearch")]
-        [Parameter(Position=3, Mandatory=$true, ParameterSetName="FullSearch")]
+        [Parameter(Position = 3, Mandatory = $true, ParameterSetName = "FileNameSearch")]
+        [Parameter(Position = 3, Mandatory = $true, ParameterSetName = "DirectoryAndFileNameSearch")]
+        [Parameter(Position = 3, Mandatory = $true, ParameterSetName = "FileNameAndFileExtensionSearch")]
+        [Parameter(Position = 3, Mandatory = $true, ParameterSetName = "FullSearch")]
         [system.object[]]
         $FileNameFilterList,
 
-        [Parameter(Position=4, Mandatory=$false, ParameterSetName="FileExtensionSearch")]
-        [Parameter(Position=4, Mandatory=$false, ParameterSetName="FileNameAndFileExtensionSearch")]
-        [Parameter(Position=4, Mandatory=$false, ParameterSetName="FullSearch")]
+        [Parameter(Position = 4, Mandatory = $false, ParameterSetName = "FileExtensionSearch")]
+        [Parameter(Position = 4, Mandatory = $false, ParameterSetName = "FileNameAndFileExtensionSearch")]
+        [Parameter(Position = 4, Mandatory = $false, ParameterSetName = "FullSearch")]
         [ValidateSet("Include", "Exclude")]
         [string]
         $FileExtensionFilterType,
 
-        [Parameter(Position=5, Mandatory=$true, ParameterSetName="FileExtensionSearch")]
-        [Parameter(Position=5, Mandatory=$true, ParameterSetName="FileNameAndFileExtensionSearch")]
-        [Parameter(Position=5, Mandatory=$true, ParameterSetName="FullSearch")]
+        [Parameter(Position = 5, Mandatory = $true, ParameterSetName = "FileExtensionSearch")]
+        [Parameter(Position = 5, Mandatory = $true, ParameterSetName = "FileNameAndFileExtensionSearch")]
+        [Parameter(Position = 5, Mandatory = $true, ParameterSetName = "FullSearch")]
         [system.object[]]
-        $FileExtensionFilterList
+        $FileExtensionFilterList,
+
+        [Parameter(Position = 6, Mandatory = $false, ParameterSetName = "DirectorySearch")]
+        [Parameter(Position = 6, Mandatory = $false, ParameterSetName = "FileNameSearch")]
+        [Parameter(Position = 6, Mandatory = $false, ParameterSetName = "FileExtensionSearch")]
+        [Parameter(Position = 6, Mandatory = $false, ParameterSetName = "DirectoryAndFileNameSearch")]
+        [Parameter(Position = 6, Mandatory = $false, ParameterSetName = "FileNameAndFileExtensionSearch")]
+        [Parameter(Position = 6, Mandatory = $false, ParameterSetName = "FullSearch")]
+        [switch]
+        $ExcludeBinaryFiles
     )
 
     Write-Verbose "##[debug]Running Get-FilteredFilePathsToTest..."
@@ -183,16 +318,23 @@ function Get-FilteredFilePathsToTest {
     Write-Verbose "##[debug]    FileExtensionFilterType: $FileExtensionFilterType"
     Write-Verbose "##[debug]    FileExtensionFilterList:"
     $FileExtensionFilterList | ForEach-Object { Write-Verbose "##[debug]        $_" }
+    Write-Verbose "##[debug]    ExcludeBinaryFiles: $ExcludeBinaryFiles"
 
     $allFiles = git ls-files -c
     Assert-ExternalCommandError -ThrowError
 
+    $allBinaryFiles = Get-AllBinaryFiles
     $filteredFilesToTest = @()
 
     foreach ($file in $allFiles) {
 
         # Exclude submodules
         if ($file.StartsWith("submodules")) {
+            continue
+        }
+
+        # Exclude binary files if required
+        if ($ExcludeBinaryFiles -And $allBinaryFiles.Contains($file)) {
             continue
         }
 
@@ -281,11 +423,11 @@ function Compare-ObjectExact {
     [CmdletBinding()]
     [OutputType([system.object[]])]
     param(
-        [Parameter(Position=0, Mandatory=$true)]
+        [Parameter(Position = 0, Mandatory = $true)]
         [system.object[]]
         $ReferenceObject,
 
-        [Parameter(Position=1, Mandatory=$true)]
+        [Parameter(Position = 1, Mandatory = $true)]
         [system.object[]]
         $DifferenceObject
     )
@@ -359,19 +501,19 @@ function Test-CodeUsingAllLinters {
 
     [CmdletBinding()]
     param(
-        [Parameter(Position=0, Mandatory=$true)]
+        [Parameter(Position = 0, Mandatory = $true)]
         [string]
         $PathToLintersSubmodulesRoot,
 
-        [Parameter(Position=1, Mandatory=$true)]
+        [Parameter(Position = 1, Mandatory = $true)]
         [string]
         $PathBackToRepositoryRoot,
 
-        [Parameter(Position=2, Mandatory=$false)]
+        [Parameter(Position = 2, Mandatory = $false)]
         [switch]
         $FixClangTidyErrors,
 
-        [Parameter(Position=3, Mandatory=$false)]
+        [Parameter(Position = 3, Mandatory = $false)]
         [switch]
         $FixClangFormatErrors
     )
@@ -435,15 +577,15 @@ function Test-CodeUsingClangTools {
 
     [CmdletBinding()]
     param(
-        [Parameter(Position=0, Mandatory=$true)]
+        [Parameter(Position = 0, Mandatory = $true)]
         [string]
         $PathToLintersSubmodulesRoot,
 
-        [Parameter(Position=1, Mandatory=$false)]
+        [Parameter(Position = 1, Mandatory = $false)]
         [switch]
         $FixClangTidyErrors,
 
-        [Parameter(Position=2, Mandatory=$false)]
+        [Parameter(Position = 2, Mandatory = $false)]
         [switch]
         $FixClangFormatErrors
     )
@@ -469,6 +611,8 @@ function Test-CodeUsingClangTools {
     (clang-format --version) | ForEach-Object { Write-Verbose "##[debug]$_" }
 
     $filesWithErrors = @()
+
+    $ErrorActionPreference = "Continue"
 
     foreach ($file in $filesToTest) {
 
@@ -521,6 +665,8 @@ function Test-CodeUsingClangTools {
         }
     }
 
+    $ErrorActionPreference = "Stop"
+
     if ($filesWithErrors.Length -gt 0) {
         Write-Information "##[error]The following files have clang-tidy/clang-format errors:"
         $filesWithErrors | ForEach-Object { Write-Information "##[error]$_" }
@@ -560,11 +706,11 @@ function Test-CodeUsingCSpell {
 
     [CmdletBinding()]
     param(
-        [Parameter(Position=0, Mandatory=$true)]
+        [Parameter(Position = 0, Mandatory = $true)]
         [string]
         $PathToLintersSubmodulesRoot,
 
-        [Parameter(Position=1, Mandatory=$true)]
+        [Parameter(Position = 1, Mandatory = $true)]
         [string]
         $PathBackToRepositoryRoot
     )
@@ -575,32 +721,42 @@ function Test-CodeUsingCSpell {
     Write-Verbose "##[debug]    PathBackToRepositoryRoot: $PathBackToRepositoryRoot"
 
     Write-Information "##[command]Retrieving all files to test against cspell..."
-    $filesToTest = Get-FilteredFilePathsToTest -DirectoryFilterType "Exclude" -DirectoryNameFilterList @("docs/html") -FileNameFilterType "Exclude" -FileNameFilterList @("package-lock") -FileExtensionFilterType "Exclude" -FileExtensionFilterList @("ico", "png", "gif", "mp4", "weights")
+    $filesToTest = Get-FilteredFilePathsToTest -DirectoryFilterType "Exclude" -DirectoryNameFilterList @("docs/html") -FileNameFilterType "Exclude" -FileNameFilterList @("package-lock") -ExcludeBinaryFiles
 
     if ($null -eq $filesToTest) {
         Write-Information "##[warning]No files found to lint for cspell! Please check if this is expected!"
         return
     }
 
+    Write-Information "##[command]Changing directory to Linters submodule folder..."
     Set-Location -Path $PathToLintersSubmodulesRoot
 
-    Write-Verbose "##[debug]Using the following cspell version..."
-    (npx cspell --version) | ForEach-Object { "##[debug]$_" } | Write-Verbose
+    try {
+        Write-Verbose "##[debug]Using the following cspell version..."
+        (npx cspell --version) | ForEach-Object { "##[debug]$_" } | Write-Verbose
 
-    $filesWithErrors = @()
+        $filesWithErrors = @()
 
-    foreach ($file in $filesToTest) {
+        foreach ($file in $filesToTest) {
 
-        Write-Information "##[command]Running cspell against '$file'..."
+            Write-Information "##[command]Running cspell against '$file'..."
 
-        (npx -c "cspell $PathBackToRepositoryRoot/$file --config $PathBackToRepositoryRoot/cspell.yml --unique --show-context --no-progress --no-summary") | ForEach-Object { "##[debug]$_" } | Write-Verbose
+            (npx -c "cspell $PathBackToRepositoryRoot/$file --config $PathBackToRepositoryRoot/cspell.yml --unique --show-context --no-progress --no-summary") | ForEach-Object { "##[debug]$_" } | Write-Verbose
 
-        if (Assert-ExternalCommandError) {
-            $filesWithErrors += $file
+            if (Assert-ExternalCommandError) {
+                $filesWithErrors += $file
+            }
         }
     }
 
-    Set-Location -Path $PathBackToRepositoryRoot
+    catch {
+        throw
+    }
+
+    finally {
+        Write-Information "##[command]Changing directory to repository root..."
+        Set-Location -Path $PathBackToRepositoryRoot
+    }
 
     if ($filesWithErrors.Length -gt 0) {
         Write-Information "##[error]The following files have cspell errors:"
@@ -641,11 +797,11 @@ function Test-CodeUsingPrettier {
 
     [CmdletBinding()]
     param(
-        [Parameter(Position=0, Mandatory=$true)]
+        [Parameter(Position = 0, Mandatory = $true)]
         [string]
         $PathToLintersSubmodulesRoot,
 
-        [Parameter(Position=1, Mandatory=$true)]
+        [Parameter(Position = 1, Mandatory = $true)]
         [string]
         $PathBackToRepositoryRoot
     )
@@ -663,25 +819,35 @@ function Test-CodeUsingPrettier {
         return
     }
 
+    Write-Information "##[command]Changing directory to Linters submodule folder..."
     Set-Location -Path $PathToLintersSubmodulesRoot
 
-    Write-Verbose "##[debug]Using the following prettier version..."
-    (npx prettier --version) | ForEach-Object { Write-Verbose "##[debug]$_" }
+    try {
+        Write-Verbose "##[debug]Using the following prettier version..."
+        (npx prettier --version) | ForEach-Object { Write-Verbose "##[debug]$_" }
 
-    $filesWithErrors = @()
+        $filesWithErrors = @()
 
-    foreach ($file in $filesToTest) {
+        foreach ($file in $filesToTest) {
 
-        Write-Information "##[command]Running prettier against '$file'..."
+            Write-Information "##[command]Running prettier against '$file'..."
 
-        (npx -c "prettier $PathBackToRepositoryRoot/$file --debug-check") | ForEach-Object { Write-Verbose "##[debug]$_" }
+            (npx -c "prettier $PathBackToRepositoryRoot/$file --debug-check") | ForEach-Object { Write-Verbose "##[debug]$_" }
 
-        if (Assert-ExternalCommandError) {
-            $filesWithErrors += $file
+            if (Assert-ExternalCommandError) {
+                $filesWithErrors += $file
+            }
         }
     }
 
-    Set-Location -Path $PathBackToRepositoryRoot
+    catch {
+        throw
+    }
+
+    finally {
+        Write-Information "##[command]Changing directory to repository root..."
+        Set-Location -Path $PathBackToRepositoryRoot
+    }
 
     if ($filesWithErrors.Length -gt 0) {
         Write-Information "##[error]The following files have prettier errors:"
@@ -719,7 +885,7 @@ function Test-CodeUsingPSScriptAnalyzer {
 
     [CmdletBinding()]
     param(
-        [Parameter(Position=0, Mandatory=$true)]
+        [Parameter(Position = 0, Mandatory = $true)]
         [string]
         $PathToLintersSubmodulesRoot
     )
@@ -1001,7 +1167,7 @@ function Test-CSpellConfiguration {
 
     Write-Verbose "##[debug]Retrieving all files to check..."
     # Same file list as found in Test-CodeUsingCSpell but also exclude cspell.yml (assumes cspell.yml is the only file with a file name of cspell)
-    $allFilesToCheck = @(Get-FilteredFilePathsToTest -DirectoryFilterType "Exclude" -DirectoryNameFilterList @("docs/html") -FileNameFilterType "Exclude" -FileNameFilterList @("cspell", "package-lock") -FileExtensionFilterType "Exclude" -FileExtensionFilterList @("ico", "png", "gif", "mp4", "weights"))
+    $allFilesToCheck = Get-FilteredFilePathsToTest -DirectoryFilterType "Exclude" -DirectoryNameFilterList @("docs/html") -FileNameFilterType "Exclude" -FileNameFilterList @("cspell", "package-lock") -ExcludeBinaryFiles
 
     [Collections.Generic.List[String]] $redundantCSpellWords = $cspellWords
     [Collections.Generic.List[String]] $redundantCSpellIgnoreWords = $cspellIgnoreWords
@@ -1082,7 +1248,7 @@ function Test-DoxygenDocumentation {
 
     [CmdletBinding()]
     param(
-        [Parameter(Position=0, Mandatory=$false)]
+        [Parameter(Position = 0, Mandatory = $false)]
         [switch]
         $ResetLocalGitChanges
     )
@@ -1308,8 +1474,6 @@ function Test-GitAttributesFile {
     Raises an error if linting issues are found for the following issues:
         - Duplicate empty lines
         - Duplicate entries
-        - Redundant entries
-        - Malformed entries
         - Not alphabetically ordered
 
     .INPUTS
@@ -1366,10 +1530,6 @@ function Test-GitIgnoreFile {
 
                 if ($foundEntries.Contains($currentLine)) {
                     $lintingErrors += @{lineNumber = $currentLineNumber; line = "'$currentLine'"; errorMessage = "Duplicate entry." }
-                }
-
-                if (-Not (Test-Path -Path $currentLine) -And $currentLine -NotIn (".vs/", ".vscode/", "build/")) { # Exclude standard IDE and build folders
-                    $lintingErrors += @{lineNumber = $currentLineNumber; line = "'$currentLine'"; errorMessage = "Redundant or malformed entry." }
                 }
 
                 $foundEntries += $currentLine
