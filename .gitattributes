@@ -5,6 +5,7 @@
 .clang-format   text
 .clang-tidy     text
 .editorconfig   text
+.gitattributes  text
 .gitignore      text
 
 # Documents
@@ -14,7 +15,6 @@ LICENSE         text
 # Scripts
 *.psd1          text
 *.psm1          text
-*.sh            text
 
 # Serialisation
 *.json          text
