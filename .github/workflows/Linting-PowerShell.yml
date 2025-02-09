@@ -82,6 +82,14 @@ jobs:
             - name: Run clang tools
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters
               run: |
+                  # TODO: move this to within the function
+
+                  if ("${{ matrix.os }}" -eq "macos-latest") {
+                      & ${{ inputs.path_to_linters_submodule_root }}/.github/workflows/helpers/override-apple-clang-on-macos.sh
+                      clang-tidy --version
+                      clang-format --version
+                  }
+
                   # Exit with a warning if no CMakeLists.txt found
                   if (-Not (Test-Path -LiteralPath ./CMakeLists.txt)) {
                       Write-Information "##[warning]No CMakeLists.txt file found at current directory! Please check if this is expected!"
@@ -95,27 +103,25 @@ jobs:
                       Build-CppCodeUsingCMake -Platform ${{ matrix.os }} -BuildType Release -BuildDirectory build -Parallel 8 -Verbose
                       Assert-ExternalCommandError -ThrowError
 
+                      if ("${{ matrix.os }}" -eq "macos-latest") {
+                          & ${{ inputs.path_to_linters_submodule_root }}/.github/workflows/helpers/override-apple-clang-on-macos.sh
+                      }
+
                       Test-CodeUsingClangTools -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose
                   }
-
 
             - name: Check doxygen documentation is updated
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters
               run: |
                   # No idea why but other platforms always result in a diff.
-                  if ("${{ matrix.os }}" -ne "macos-latest") {
-                      Write-Information "##[section]${{ matrix.os }} is not supported by this step."
-                  }
-
-                  else {
+                  if ("${{ matrix.os }}" -eq "macos-latest") {
                       Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
                       Test-DoxygenDocumentation -Verbose
                   }
 
-                  ninja --version
-                  doxygen --version
-                  /opt/homebrew/opt/llvm/bin/clang-tidy --version
-                  /opt/homebrew/opt/llvm/bin/clang-format --version
+                  else {
+                      Write-Information "##[section]${{ matrix.os }} is not supported by this step."
+                  }
 
             - name: Upload doxygen documentation
               uses: actions/upload-artifact@v4
