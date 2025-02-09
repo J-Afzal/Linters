@@ -37,16 +37,18 @@ jobs:
               with:
                   submodules: true
 
-            - name: Install brew on ubuntu-latest
-              if: ${{ matrix.os }} == 'ubuntu-latest'
-              shell: bash
-              run: /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
             - name: Install linting dependencies
               id: dependencies
               run: |
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
-                  Install-LintingDependencies -Platform ${{ matrix.os }} -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -PathBackToRepositoryRoot ${{ inputs.path_back_to_repository_root }} -InstallCppLintingDependencies -Verbose
+                  Install-LintingDependencies -Platform ${{ matrix.os }} -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -PathBackToRepositoryRoot ${{ inputs.path_back_to_repository_root }} -InstallCppLintingDependencies:${{ inputs.run_cpp_linters}} -Verbose
+
+            - name: Install ubuntu-latest linting dependencies
+              if: ${{ matrix.os }} == 'ubuntu-latest'
+              shell: bash
+              run: |
+                  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+                  pwsh -c "Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1; Install-LintingDependencies -Platform ${{ matrix.os }} -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -PathBackToRepositoryRoot ${{ inputs.path_back_to_repository_root }} -InstallCppLintingDependencies:${{ inputs.run_cpp_linters}} -Verbose"
 
             - name: Run gitignore linter
               if: (success() || failure()) && steps.dependencies.outcome == 'success'

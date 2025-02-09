@@ -10,6 +10,9 @@ $InformationPreference = "Continue"
     Ideally Cpp linting dependencies would also be installed here but due to installation complexities they are done within the
     respective Cpp linting step.
 
+    .PARAMETER Platform
+    Specifies the platform being run on.
+
     .PARAMETER PathToLintersSubmodulesRoot
     Specifies the path the to the root of the Linters submodule.
 
@@ -17,7 +20,7 @@ $InformationPreference = "Continue"
     Specifies the path need to return to the repository root from the Linters submodule.
 
     .PARAMETER InstallCppLintingDependencies
-    Whether to install C++ linting dependencies.
+    Specifies whether to install C++ linting dependencies.
 
     .INPUTS
     None.

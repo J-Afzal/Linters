@@ -5,7 +5,6 @@
 .clang-format   text
 .clang-tidy     text
 .editorconfig   text
-.gitattributes  text
 .gitignore      text
 
 # Documents

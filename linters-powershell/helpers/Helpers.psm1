@@ -553,6 +553,9 @@ function Test-CodeUsingAllLinters {
     CMake must be configured in the ./build/ directory as the 'compile_commands.json' file is needed by clang-tidy.
     Raises an error if linting errors found.
 
+    .PARAMETER Platform
+    Specifies the platform being run on.
+
     .PARAMETER PathToLintersSubmodulesRoot
     Specifies the path the to the root of the Linters submodule.
 
@@ -570,13 +573,18 @@ function Test-CodeUsingAllLinters {
 
     .EXAMPLE
     Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
-    Test-CodeUsingClangTools -PathToLintersSubmodulesRoot "./submodules/Linters" -FixClangTidyErrors -FixClangFormatErrors -Verbose
+    Test-CodeUsingClangTools -Platform macos-latest -PathToLintersSubmodulesRoot "./submodules/Linters" -FixClangTidyErrors -FixClangFormatErrors -Verbose
 #>
 
 function Test-CodeUsingClangTools {
 
     [CmdletBinding()]
     param(
+        [Parameter(Position = 0, Mandatory = $true)]
+        [ValidateSet("macos-latest", "ubuntu-latest", "windows-latest")]
+        [string]
+        $Platform,
+
         [Parameter(Position = 0, Mandatory = $true)]
         [string]
         $PathToLintersSubmodulesRoot,
