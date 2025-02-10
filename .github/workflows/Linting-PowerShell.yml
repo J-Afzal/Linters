@@ -37,26 +37,51 @@ jobs:
               with:
                   submodules: true
 
-            # - name: Install linting dependencies
-            #   id: dependencies
-            #   shell: bash
-            #   run: |
-            #       echo "##[]"
-            #   # TODO: Delete dependencies and make the whole thing a single bash step.
-
-            - name: Install ubuntu-latest linting dependencies
-              if: ${{ matrix.os }} == ubuntu-latest
-              shell: bash
-              run: |
-                /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-                pwsh -c "Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1; Install-LintingDependencies -Platform ${{ matrix.os }} -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -PathBackToRepositoryRoot ${{ inputs.path_back_to_repository_root }} -InstallCppLintingDependencies -Verbose"
-
             - name: Install linting dependencies
               id: dependencies
-              if: ${{ matrix.os }} != ubuntu-latest
+              shell: bash
               run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
-                  Install-LintingDependencies -Platform ${{ matrix.os }} -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -PathBackToRepositoryRoot ${{ inputs.path_back_to_repository_root }} -InstallCppLintingDependencies:$${{ inputs.run_cpp_linters}} -Verbose
+                  echo "##[command]Changing directory to Linters submodule folder..."
+                  cd ${{ inputs.path_to_linters_submodule_root }}
+
+                  echo "##[command]Installing npm dependencies..."
+                  npm install
+
+                  if [ !${{ inputs.run_cpp_linters }} ]
+                  then
+                      exit 0
+                  fi
+
+                  if [ ${{ matrix.os }} -eq macos-latest ]
+                  then
+                      brew install ninja
+                      brew install llvm
+                      brew install doxygen
+
+                  elif [ ${{ matrix.os }} -eq ubuntu-latest ]
+                  then
+                      sudo apt-get install ninja-build
+
+                      # Install brew to get latest llvm and clang tools
+                      test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
+                      test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+                      echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
+                      export PATH="$HOME/.linuxbrew/bin:$PATH"
+
+                      brew install llvm
+                      brew install doxygen
+
+                  elif [ ${{ matrix.os }} -eq windows-latest ]
+                  then
+                      choco install ninja -y
+                      choco upgrade llvm -y
+                      choco install doxygen.portable -y
+
+                  else
+                      echo "##[error]'${{ matrix.os }}' is an unsupported platform."
+                  fi
+
+                  echo "##[section]All linting dependencies installed!"
 
             - name: Run gitignore linter
               if: (success() || failure()) && steps.dependencies.outcome == 'success'
