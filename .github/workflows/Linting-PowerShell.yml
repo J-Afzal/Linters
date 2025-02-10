@@ -39,9 +39,51 @@ jobs:
 
             - name: Install linting dependencies
               id: dependencies
+              shell: bash
               run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
-                  Install-LintingDependencies -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose
+                  echo "##[section]Installing linting dependencies..."
+
+                  echo "##[command]Changing directory to Linters submodule folder..."
+                  cd ${{ inputs.path_to_linters_submodule_root }}
+
+                  echo "##[command]Installing npm dependencies..."
+                  npm install
+
+                  if [ ${{ inputs.run_cpp_linters }} == false ]
+                  then
+                      exit 0
+                  fi
+
+                  if [ ${{ matrix.os }} == macos-latest ]
+                  then
+                      brew install ninja
+                      brew install llvm
+                      brew install doxygen
+
+                  elif [ ${{ matrix.os }} == ubuntu-latest ]
+                  then
+                      sudo apt-get install ninja-build
+
+                      # Install brew to get latest llvm and clang tools
+                      test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
+                      test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+                      echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
+                      export PATH="$HOME/.linuxbrew/bin:$PATH"
+
+                      brew install llvm
+                      brew install doxygen
+
+                  elif [ ${{ matrix.os }} == windows-latest ]
+                  then
+                      choco install ninja -y
+                      choco upgrade llvm -y
+                      choco install doxygen.portable -y
+
+                  else
+                      echo "##[error]'${{ matrix.os }}' is an unsupported platform."
+                  fi
+
+                  echo "##[section]All linting dependencies installed!"
 
             - name: Run gitignore linter
               if: (success() || failure()) && steps.dependencies.outcome == 'success'
@@ -81,86 +123,35 @@ jobs:
 
             - name: Run clang tools
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters
-              shell: bash
               run: |
                   # Exit with a warning if no CMakeLists.txt found
-                  if [ ! -f ./CMakeLists.txt ]; then
-                      echo "##[warning]No CMakeLists.txt file found at current directory! Please check if this is expected!"
-                      exit 0
-                  fi
+                  if (-Not (Test-Path -LiteralPath ./CMakeLists.txt)) {
+                      Write-Information "##[warning]No CMakeLists.txt file found at current directory! Please check if this is expected!"
+                  }
 
-                  # Install the ninja and the latest version of clang-tidy and clang-format
-                  if [ ${{ matrix.os }} = macos-latest ]
-                  then
-                      brew install ninja
-                      brew install llvm
-                      # Override pre-installed clang by adding to the path
-                      export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
-                  fi
+                  else {
+                      Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
 
-                  if [ ${{ matrix.os }} = ubuntu-latest ]
-                  then
-                      sudo apt-get install ninja-build
+                      # Configure CMake to create the "compile_commands.json" file
+                      Import-Module ./modules/Build.psd1
+                      Build-CppCodeUsingCMake -Platform ${{ matrix.os }} -BuildType Release -BuildDirectory build -Parallel 8 -Verbose
+                      Assert-ExternalCommandError -ThrowError
 
-                      # Install brew to get latest llvm and clang tools
-                      test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
-                      test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-                      echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
-                      export PATH="$HOME/.linuxbrew/bin:$PATH"
-                      brew install llvm
-                  fi
-
-                  if [ ${{ matrix.os }} = windows-latest ]
-                  then
-                      choco install ninja -y
-                      choco upgrade llvm -y
-                  fi
-
-                  # Configure CMake to create the "compile_commands.json" file
-                  cmake -S . -B ./build -G "Ninja"
-
-                  pwsh -command "Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1; Test-CodeUsingClangTools -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose"
+                      Test-CodeUsingClangTools -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose
+                  }
 
             - name: Check doxygen documentation is updated
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters
-              shell: bash
               run: |
-                  # No idea why but other platforms always result in a diff. Other platform code remains in-case this is fixed
-                  # at a later date.
-                  if [ ${{ matrix.os }} != macos-latest ]; then
-                      echo "##[section]${{ matrix.os }} is not supported by this step."
-                      exit 0
-                  fi
+                  # No idea why but other platforms always result in a diff.
+                  if ("${{ matrix.os }}" -eq "macos-latest") {
+                      Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
+                      Test-DoxygenDocumentation -Verbose
+                  }
 
-                  # Exit with a warning if no Doxyfile found
-                  if [ ! -f ./Doxyfile ]; then
-                      echo "##[warning]No Doxyfile file found at current directory! Please check if this is expected!"
-                      exit 0
-                  fi
-
-                  if [ ${{ matrix.os }} = macos-latest ]
-                  then
-                      brew install doxygen
-                  fi
-
-                  if [ ${{ matrix.os }} = ubuntu-latest ]
-                  then
-                      sudo apt-get install ninja-build
-
-                      # Install brew to get latest doxygen
-                      test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
-                      test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-                      echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
-                      export PATH="$HOME/.linuxbrew/bin:$PATH"
-                      brew install doxygen
-                  fi
-
-                  if [ ${{ matrix.os }} = windows-latest ]
-                  then
-                    choco install doxygen.portable -y
-                  fi
-
-                  pwsh -c "Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1; Test-DoxygenDocumentation -ResetLocalGitChanges -Verbose"
+                  else {
+                      Write-Information "##[section]${{ matrix.os }} is not supported by this step."
+                  }
 
             - name: Upload doxygen documentation
               uses: actions/upload-artifact@v4

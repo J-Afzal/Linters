@@ -7,6 +7,7 @@ ignorePaths:
     - node_modules/
     - package-lock.json
 words:
+    - afzal
     - bugprone
     - doxyfile
     - linters
