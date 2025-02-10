@@ -64,11 +64,10 @@ jobs:
                   then
                       sudo apt-get install ninja-build
 
-                      # Install brew to get latest llvm and clang tools
+                      # Install brew to get latest llvm, clang tools and doxygen
                       test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
                       test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
                       echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
-                      export PATH="$HOME/.linuxbrew/bin:$PATH"
 
                       brew install llvm
                       brew install doxygen
@@ -120,6 +119,10 @@ jobs:
               run: |
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
                   Test-CodeUsingPSScriptAnalyzer -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose
+
+            # Needed for the Build-CppCodeUsingCMake command.
+            - uses: ilammy/msvc-dev-cmd@v1
+              if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters && ${{ matrix.os }} == 'windows-latest'
 
             - name: Run clang tools
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters
