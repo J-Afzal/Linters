@@ -120,6 +120,7 @@ jobs:
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
                   Test-CodeUsingPSScriptAnalyzer -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose
 
+            # Needed for the Build-CppCodeUsingCMake command.
             - uses: ilammy/msvc-dev-cmd@v1
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters && ${{ matrix.os }} == 'windows-latest'
 
