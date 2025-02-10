@@ -629,11 +629,23 @@ function Test-CodeUsingClangTools {
     }
 
     Write-Verbose "##[debug]Using the following clang-tidy version..."
-    (clang-tidy --version) | ForEach-Object { Write-Verbose "##[debug]$_" }
+    if ($Platform -eq "macos-latest") {
+        (/opt/homebrew/opt/llvm/bin/clang-tidy --version) | ForEach-Object { Write-Verbose "##[debug]$_" }
+    }
+
+    else {
+        (clang-tidy --version) | ForEach-Object { Write-Verbose "##[debug]$_" }
+    }
     Assert-ExternalCommandError -ThrowError
 
     Write-Verbose "##[debug]Using the following clang-format version..."
-    (clang-format --version) | ForEach-Object { Write-Verbose "##[debug]$_" }
+    if ($Platform -eq "macos-latest") {
+        (/opt/homebrew/opt/llvm/bin/clang-format --version) | ForEach-Object { Write-Verbose "##[debug]$_" }
+    }
+
+    else {
+        (clang-format --version) | ForEach-Object { Write-Verbose "##[debug]$_" }
+    }
     Assert-ExternalCommandError -ThrowError
 
     $filesWithErrors = @()
