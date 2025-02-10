@@ -480,6 +480,15 @@ function Compare-ObjectExact {
     Intended to be used locally during development to manually check for linting issues before pushing a commit.
     Raises an error at the first occurrence of a linting error.
 
+    .PARAMETER Platform
+    Specifies the platform being run on.
+
+    .PARAMETER PathToLintersSubmodulesRoot
+    Specifies the path the to the root of the Linters submodule.
+
+    .PARAMETER PathBackToRepositoryRoot
+    Specifies the path need to return to the repository root from the Linters submodule.
+
     .PARAMETER FixClangTidyErrors
     Specifies whether to use clang-tidy to automatically fix any fixable errors.
 
@@ -502,24 +511,30 @@ function Test-CodeUsingAllLinters {
     [CmdletBinding()]
     param(
         [Parameter(Position = 0, Mandatory = $true)]
+        [ValidateSet("macos-latest", "ubuntu-latest", "windows-latest")]
         [string]
-        $PathToLintersSubmodulesRoot,
+        $Platform,
 
         [Parameter(Position = 1, Mandatory = $true)]
         [string]
+        $PathToLintersSubmodulesRoot,
+
+        [Parameter(Position = 2, Mandatory = $true)]
+        [string]
         $PathBackToRepositoryRoot,
 
-        [Parameter(Position = 2, Mandatory = $false)]
+        [Parameter(Position = 3, Mandatory = $false)]
         [switch]
         $FixClangTidyErrors = $false,
 
-        [Parameter(Position = 3, Mandatory = $false)]
+        [Parameter(Position = 4, Mandatory = $false)]
         [switch]
         $FixClangFormatErrors = $false
     )
 
     Write-Verbose "##[debug]Running Test-CodeUsingAllLinting..."
     Write-Verbose "##[debug]Parameters:"
+    Write-Verbose "##[debug]    Platform: $Platform"
     Write-Verbose "##[debug]    PathToLintersSubmodulesRoot: $PathToLintersSubmodulesRoot"
     Write-Verbose "##[debug]    PathBackToRepositoryRoot: $PathBackToRepositoryRoot"
     Write-Verbose "##[debug]    FixClangTidyErrors: $FixClangTidyErrors"
@@ -537,7 +552,7 @@ function Test-CodeUsingAllLinters {
 
     Test-CodeUsingPSScriptAnalyzer -PathToLintersSubmodulesRoot $PathToLintersSubmodulesRoot
 
-    Test-CodeUsingClangTools -PathToLintersSubmodulesRoot $PathToLintersSubmodulesRoot -FixClangTidyErrors:$FixClangTidyErrors -FixClangFormatErrors:$FixClangFormatErrors
+    Test-CodeUsingClangTools -Platform $Platform -PathToLintersSubmodulesRoot $PathToLintersSubmodulesRoot -FixClangTidyErrors:$FixClangTidyErrors -FixClangFormatErrors:$FixClangFormatErrors
 
     Test-DoxygenDocumentation -Verbose
 
@@ -600,6 +615,7 @@ function Test-CodeUsingClangTools {
 
     Write-Verbose "##[debug]Running Test-CodeUsingClangTools..."
     Write-Verbose "##[debug]Parameters:"
+    Write-Verbose "##[debug]    Platform: $Platform"
     Write-Verbose "##[debug]    PathToLintersSubmodulesRoot: $PathToLintersSubmodulesRoot"
     Write-Verbose "##[debug]    FixClangTidyErrors: $FixClangTidyErrors"
     Write-Verbose "##[debug]    FixClangFormatErrors: $FixClangFormatErrors"
@@ -1278,6 +1294,7 @@ function Test-CSpellConfiguration {
     Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
     Test-DoxygenDocumentation -ResetLocalGitChanges -Verbose
 #>
+
 function Test-DoxygenDocumentation {
 
     [CmdletBinding()]
