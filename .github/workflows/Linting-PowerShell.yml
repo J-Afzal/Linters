@@ -49,18 +49,18 @@ jobs:
                   echo "##[command]Installing npm dependencies..."
                   npm install
 
-                  if [ !${{ inputs.run_cpp_linters }} ]
+                  if [ ${{ inputs.run_cpp_linters }} == false ]
                   then
                       exit 0
                   fi
 
-                  if [ ${{ matrix.os }} -eq macos-latest ]
+                  if [ ${{ matrix.os }} == macos-latest ]
                   then
                       brew install ninja
                       brew install llvm
                       brew install doxygen
 
-                  elif [ ${{ matrix.os }} -eq ubuntu-latest ]
+                  elif [ ${{ matrix.os }} == ubuntu-latest ]
                   then
                       sudo apt-get install ninja-build
 
@@ -73,7 +73,7 @@ jobs:
                       brew install llvm
                       brew install doxygen
 
-                  elif [ ${{ matrix.os }} -eq windows-latest ]
+                  elif [ ${{ matrix.os }} == windows-latest ]
                   then
                       choco install ninja -y
                       choco upgrade llvm -y
