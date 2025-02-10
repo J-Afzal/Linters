@@ -49,7 +49,7 @@ jobs:
                   echo "##[command]Installing npm dependencies..."
                   npm install
 
-                  if [ ${{ inputs.run_cpp_linters }} == false ]
+                  if [ ${{ inputs.run_cpp_linters }} == true ]
                   then
                       exit 0
                   fi
