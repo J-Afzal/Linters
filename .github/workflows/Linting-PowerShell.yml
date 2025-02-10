@@ -41,13 +41,15 @@ jobs:
               id: dependencies
               shell: bash
               run: |
+                  echo "##[section]Installing linting dependencies..."
+
                   echo "##[command]Changing directory to Linters submodule folder..."
                   cd ${{ inputs.path_to_linters_submodule_root }}
 
                   echo "##[command]Installing npm dependencies..."
                   npm install
 
-                  if [ ${{ inputs.run_cpp_linters }} ]
+                  if [ !${{ inputs.run_cpp_linters }} ]
                   then
                       exit 0
                   fi
