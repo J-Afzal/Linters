@@ -137,7 +137,7 @@ jobs:
                       Build-CppCodeUsingCMake -Platform ${{ matrix.os }} -BuildType Release -BuildDirectory build -Parallel 8 -Verbose
                       Assert-ExternalCommandError -ThrowError
 
-                      Test-CodeUsingClangTools -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose
+                      Test-CodeUsingClangTools -Platform ${{ matrix.os }} -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose
                   }
 
             - name: Check doxygen documentation is updated
