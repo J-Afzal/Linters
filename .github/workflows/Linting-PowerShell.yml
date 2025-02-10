@@ -64,22 +64,13 @@ jobs:
                   then
                       sudo apt-get install ninja-build
 
-                      # Install brew to get latest llvm and clang tools
+                      # Install brew to get latest llvm, clang tools and doxygen
                       test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
                       test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
                       echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
-                      export PATH="$HOME/.linuxbrew/bin:$PATH"
 
                       brew install llvm
                       brew install doxygen
-
-
-                      
-
-
-                      which doxygen
-                      which clang-tidy
-                      which clang-format
 
                   elif [ ${{ matrix.os }} == windows-latest ]
                   then
@@ -135,14 +126,6 @@ jobs:
             - name: Run clang tools
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters
               run: |
-                  /home/linuxbrew/.linuxbrew/bin/llvm/clang-tidy --version
-                  /home/linuxbrew/.linuxbrew/bin/llvm/clang-format --version
-
-
-
-
-
-
                   # Exit with a warning if no CMakeLists.txt found
                   if (-Not (Test-Path -LiteralPath ./CMakeLists.txt)) {
                       Write-Information "##[warning]No CMakeLists.txt file found at current directory! Please check if this is expected!"

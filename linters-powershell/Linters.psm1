@@ -631,9 +631,9 @@ function Test-CodeUsingClangTools {
     Write-Verbose "##[debug]Using the following clang-tidy version..."
     if ($Platform -eq "macos-latest") {
         (/opt/homebrew/opt/llvm/bin/clang-tidy --version) | ForEach-Object { Write-Verbose "##[debug]$_" }
-    }
-
-    else {
+    } else if ($Platform -eq "ubuntu-latest") {
+        (/home/linuxbrew/.linuxbrew/bin/clang-tidy --version) | ForEach-Object { Write-Verbose "##[debug]$_" }
+    } else {
         (clang-tidy --version) | ForEach-Object { Write-Verbose "##[debug]$_" }
     }
     Assert-ExternalCommandError -ThrowError
@@ -641,9 +641,9 @@ function Test-CodeUsingClangTools {
     Write-Verbose "##[debug]Using the following clang-format version..."
     if ($Platform -eq "macos-latest") {
         (/opt/homebrew/opt/llvm/bin/clang-format --version) | ForEach-Object { Write-Verbose "##[debug]$_" }
-    }
-
-    else {
+    } else if ($Platform -eq "ubuntu-latest") {
+        (/home/linuxbrew/.linuxbrew/bin/clang-format --version) | ForEach-Object { Write-Verbose "##[debug]$_" }
+    } else {
         (clang-format --version) | ForEach-Object { Write-Verbose "##[debug]$_" }
     }
     Assert-ExternalCommandError -ThrowError
@@ -657,9 +657,9 @@ function Test-CodeUsingClangTools {
         Write-Information "##[command]Running clang-tidy against '$file'..."
         if ($Platform -eq "macos-latest") {
             (/opt/homebrew/opt/llvm/bin/clang-tidy --config-file $PathToLintersSubmodulesRoot/.clang-tidy $file -p ./build 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
-        }
-
-        else {
+        } else if ($Platform -eq "ubuntu-latest") {
+            (/home/linuxbrew/.linuxbrew/bin/clang-tidy --config-file $PathToLintersSubmodulesRoot/.clang-tidy $file -p ./build 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
+        } else {
             (clang-tidy --config-file $PathToLintersSubmodulesRoot/.clang-tidy $file -p ./build 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
         }
 
@@ -669,9 +669,9 @@ function Test-CodeUsingClangTools {
                 Write-Verbose "##[debug]Fixing clang-tidy issues in '$file'..."
                 if ($Platform -eq "macos-latest") {
                     (/opt/homebrew/opt/llvm/bin/clang-tidy --config-file $PathToLintersSubmodulesRoot/.clang-tidy --fix $file -p ./build 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
-                }
-
-                else {
+                } else if ($Platform -eq "ubuntu-latest") {
+                    (/home/linuxbrew/.linuxbrew/bin/clang-tidy --config-file $PathToLintersSubmodulesRoot/.clang-tidy --fix $file -p ./build 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
+                } else {
                     (clang-tidy --config-file $PathToLintersSubmodulesRoot/.clang-tidy --fix $file -p ./build 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
                 }
 
@@ -693,9 +693,9 @@ function Test-CodeUsingClangTools {
         Write-Information "##[command]Running clang-format against '$file'..."
         if ($Platform -eq "macos-latest") {
             (/opt/homebrew/opt/llvm/bin/clang-format --style=file:$PathToLintersSubmodulesRoot/.clang-format --Werror --dry-run $file 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
-        }
-
-        else {
+        } else if ($Platform -eq "ubuntu-latest") {
+            (/home/linuxbrew/.linuxbrew/bin/clang-format --style=file:$PathToLintersSubmodulesRoot/.clang-format --Werror --dry-run $file 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
+        } else {
             (clang-format --style=file:$PathToLintersSubmodulesRoot/.clang-format --Werror --dry-run $file 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
         }
 
@@ -705,9 +705,9 @@ function Test-CodeUsingClangTools {
                 Write-Verbose "##[debug]Fixing clang-format issues in '$file'..."
                 if ($Platform -eq "macos-latest") {
                     (/opt/homebrew/opt/llvm/bin/clang-format --style=file:$PathToLintersSubmodulesRoot/.clang-format --Werror --i $file 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
-                }
-
-                else {
+                } else if ($Platform -eq "ubuntu-latest") {
+                    (/home/linuxbrew/.linuxbrew/bin/clang-format --style=file:$PathToLintersSubmodulesRoot/.clang-format --Werror --i $file 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
+                } else {
                     (clang-format --style=file:$PathToLintersSubmodulesRoot/.clang-format --Werror --i $file 2>&1) | ForEach-Object { Write-Verbose "##[debug]$_" }
                 }
 
