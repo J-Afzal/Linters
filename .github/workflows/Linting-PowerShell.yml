@@ -73,6 +73,14 @@ jobs:
                       brew install llvm
                       brew install doxygen
 
+
+                      
+
+
+                      which doxygen
+                      which clang-tidy
+                      which clang-format
+
                   elif [ ${{ matrix.os }} == windows-latest ]
                   then
                       choco install ninja -y
@@ -121,9 +129,20 @@ jobs:
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
                   Test-CodeUsingPSScriptAnalyzer -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose
 
+            - uses: ilammy/msvc-dev-cmd@v1
+              if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters && ${{ matrix.os }} == 'windows-latest'
+
             - name: Run clang tools
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters
               run: |
+                  /home/linuxbrew/.linuxbrew/bin/llvm/clang-tidy --version
+                  /home/linuxbrew/.linuxbrew/bin/llvm/clang-format --version
+
+
+
+
+
+
                   # Exit with a warning if no CMakeLists.txt found
                   if (-Not (Test-Path -LiteralPath ./CMakeLists.txt)) {
                       Write-Information "##[warning]No CMakeLists.txt file found at current directory! Please check if this is expected!"
