@@ -49,37 +49,35 @@ jobs:
                   echo "##[command]Installing npm dependencies..."
                   npm install
 
-                  if [ ${{ inputs.run_cpp_linters }} == false ]
+                  if [ ${{ inputs.run_cpp_linters }} == true ]
                   then
-                      exit 0
-                  fi
+                      if [ ${{ matrix.os }} == macos-latest ]
+                      then
+                          brew install ninja
+                          brew install llvm
+                          brew install doxygen
 
-                  if [ ${{ matrix.os }} == macos-latest ]
-                  then
-                      brew install ninja
-                      brew install llvm
-                      brew install doxygen
+                      elif [ ${{ matrix.os }} == ubuntu-latest ]
+                      then
+                          sudo apt-get install ninja-build
 
-                  elif [ ${{ matrix.os }} == ubuntu-latest ]
-                  then
-                      sudo apt-get install ninja-build
+                          # Install brew to get latest llvm, clang tools and doxygen
+                          test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
+                          test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+                          echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
 
-                      # Install brew to get latest llvm, clang tools and doxygen
-                      test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
-                      test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-                      echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
+                          brew install llvm
+                          brew install doxygen
 
-                      brew install llvm
-                      brew install doxygen
+                      elif [ ${{ matrix.os }} == windows-latest ]
+                      then
+                          choco install ninja -y
+                          choco upgrade llvm -y
+                          choco install doxygen.portable -y
 
-                  elif [ ${{ matrix.os }} == windows-latest ]
-                  then
-                      choco install ninja -y
-                      choco upgrade llvm -y
-                      choco install doxygen.portable -y
-
-                  else
-                      echo "##[error]'${{ matrix.os }}' is an unsupported platform."
+                      else
+                          echo "##[error]'${{ matrix.os }}' is an unsupported platform."
+                      fi
                   fi
 
                   echo "##[section]All linting dependencies installed!"
