@@ -6,6 +6,7 @@ Checks: "*, \
     -bugprone-easily-swappable-parameters, \
     -cert-*, \
     -concurrency-*, \
+    -clang-diagnostic-c++17-extensions, \
     -darwin-*, \
     -fuchsia-default-arguments-calls, \
     -fuchsia-default-arguments-declarations, \
