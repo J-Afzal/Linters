@@ -37,7 +37,7 @@ function Assert-ExternalCommandError {
     Write-Verbose "##[debug]Parameters:"
     Write-Verbose "##[debug]    ThrowError: $ThrowError"
 
-    if ($LASTEXITCODE -eq 1) {
+    if ($LASTEXITCODE -ne 0) {
         if ($ThrowError) {
             Write-Error "##[error]Please resolve the above errors!"
         }
