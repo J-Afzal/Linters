@@ -628,12 +628,6 @@ function Test-CodeUsingClangTools {
         return
     }
 
-    if (-Not (Test-Path -LiteralPath ./build/)) {
-        New-Item ./build/ -Type Directory
-    }
-
-    Copy-Item -LiteralPath ./compile_commands-$Platform/compile_commands.json -Destination ./build/compile_commands.json
-
     Write-Verbose "##[debug]Using the following clang-tidy version..."
     if ($Platform -eq "macos-latest") {
         (/opt/homebrew/opt/llvm/bin/clang-tidy --version) | ForEach-Object { Write-Verbose "##[debug]$_" }

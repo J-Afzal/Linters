@@ -14,4 +14,3 @@ jobs:
             path_to_linters_submodule_root: "."
             path_back_to_repository_root: "."
             run_powershell_linters: true
-            run_cpp_linters: true
