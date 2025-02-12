@@ -118,15 +118,14 @@ jobs:
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
                   Test-CodeUsingPSScriptAnalyzer -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose
 
-            - name: Download compile_commands.json
-              if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters
-              uses: actions/download-artifact@v4
-              with:
-                  pattern: compile_commands-${{ matrix.os }}
-
             - name: Run clang tools
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters
               run: |
+                  # Configure CMake to create the "compile_commands.json" file
+                  Import-Module ./modules/Build.psd1
+                  Build-CppCodeUsingCMake -Platform ${{ matrix.os }} -BuildType Release -BuildDirectory build -Parallel 8 -ConfigureOnly -Verbose
+                  Assert-ExternalCommandError -ThrowError
+
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
                   Test-CodeUsingClangTools -Platform ${{ matrix.os }} -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose
 
