@@ -33,23 +33,17 @@ function Assert-ExternalCommandError {
         $ThrowError = $false
     )
 
-    Write-Verbose "##[debug]Running Assert-ExternalCommandError..."
-    Write-Verbose "##[debug]Parameters:"
-    Write-Verbose "##[debug]    ThrowError: $ThrowError"
-
     if ($LASTEXITCODE -ne 0) {
         if ($ThrowError) {
             Write-Error "##[error]Please resolve the above errors!"
         }
 
         else {
-            Write-Verbose "##[debug]Returning: true"
             return $true
         }
     }
 
     elseif (-Not $ThrowError) {
-        Write-Verbose "##[debug]Returning: false"
         return $false
     }
 }
@@ -158,7 +152,7 @@ function Get-AllBinaryFiles {
         }
     }
 
-    Write-Verbose "##[debug]Returning:"
+    Write-Verbose "##[debug]Get-AllBinaryFiles returning:"
     $allBinaryFiles | ForEach-Object { Write-Verbose "##[debug]    $_" }
 
     return $allBinaryFiles
@@ -201,7 +195,7 @@ function Get-AllFilePathsToTest {
 
     $allFilesToTest = Get-FilteredFilePathsToTest -DirectoryFilterType "Exclude" -DirectoryNameFilterList @("nothing") -FileNameFilterType "Exclude" -FileNameFilterList @("nothing") -FileExtensionFilterType "Exclude" -FileExtensionFilterList @("nothing") -ExcludeBinaryFiles:$ExcludeBinaryFiles
 
-    Write-Verbose "##[debug]Returning:"
+    Write-Verbose "##[debug]Get-AllFilePathsToTest returning:"
     $allFilesToTest | ForEach-Object { Write-Verbose "##[debug]    $_" }
 
     return $allFilesToTest
@@ -384,7 +378,7 @@ function Get-FilteredFilePathsToTest {
         $filteredFilesToTest += $file
     }
 
-    Write-Verbose "##[debug]Returning:"
+    Write-Verbose "##[debug]Get-FilteredFilePathsToTest returning:"
     $filteredFilesToTest | ForEach-Object { Write-Verbose "##[debug]    $_" }
 
     return $filteredFilesToTest
@@ -466,7 +460,7 @@ function Compare-ObjectExact {
         }
     }
 
-    Write-Verbose "##[debug]Returning:"
+    Write-Verbose "##[debug]Compare-ObjectExact returning:"
     $errors | ForEach-Object { Write-Verbose "##[debug]    $_" }
 
     return $errors
@@ -797,17 +791,12 @@ function Test-CodeUsingCSpell {
         Write-Verbose "##[debug]Using the following cspell version..."
         (npx cspell --version) | ForEach-Object { "##[debug]$_" } | Write-Verbose
 
-        $filesWithErrors = @()
+        Write-Information "##[command]Running cspell..."
 
-        foreach ($file in $filesToTest) {
+        (npx -c "cspell $filesToTest --config $PathBackToRepositoryRoot/cspell.yml --unique --show-context --no-progress --no-summary") | ForEach-Object { "##[error]$_" } | Write-Information
 
-            Write-Information "##[command]Running cspell against '$file'..."
-
-            (npx -c "cspell $PathBackToRepositoryRoot/$file --config $PathBackToRepositoryRoot/cspell.yml --unique --show-context --no-progress --no-summary") | ForEach-Object { "##[debug]$_" } | Write-Verbose
-
-            if (Assert-ExternalCommandError) {
-                $filesWithErrors += $file
-            }
+        if (Assert-ExternalCommandError) {
+            Write-Error "##[error]Please resolve the above errors!"
         }
     }
 
@@ -820,15 +809,7 @@ function Test-CodeUsingCSpell {
         Set-Location -LiteralPath $PathBackToRepositoryRoot
     }
 
-    if ($filesWithErrors.Length -gt 0) {
-        Write-Information "##[error]The following files have cspell errors:"
-        $filesWithErrors | ForEach-Object { Write-Information "##[error]$_" }
-        Write-Error "##[error]Please resolve the above errors!"
-    }
-
-    else {
-        Write-Output "##[section]All files conform to cspell standards!"
-    }
+    Write-Output "##[section]All files conform to cspell standards!"
 }
 
 <#
@@ -888,17 +869,14 @@ function Test-CodeUsingPrettier {
         Write-Verbose "##[debug]Using the following prettier version..."
         (npx prettier --version) | ForEach-Object { Write-Verbose "##[debug]$_" }
 
-        $filesWithErrors = @()
+        Write-Information "##[command]Running prettier..."
 
-        foreach ($file in $filesToTest) {
+        $errors = @(npx -c "prettier $filesToTest --list-different")
 
-            Write-Information "##[command]Running prettier against '$file'..."
-
-            (npx -c "prettier $PathBackToRepositoryRoot/$file --debug-check") | ForEach-Object { Write-Verbose "##[debug]$_" }
-
-            if (Assert-ExternalCommandError) {
-                $filesWithErrors += $file
-            }
+        if ($errors.Length -gt 0) {
+            Write-Information "##[error]The following files differ from Prettier formatting:"
+            $errors | ForEach-Object { Write-Information "##[error]    $_" }
+            Write-Error "##[error]Please resolve the above errors!"
         }
     }
 
@@ -911,15 +889,7 @@ function Test-CodeUsingPrettier {
         Set-Location -LiteralPath $PathBackToRepositoryRoot
     }
 
-    if ($filesWithErrors.Length -gt 0) {
-        Write-Information "##[error]The following files have prettier errors:"
-        $filesWithErrors | ForEach-Object { Write-Information "##[error]$_" }
-        Write-Error "##[error]Please resolve the above errors!"
-    }
-
-    else {
-        Write-Output "##[section]All files conform to prettier standards!"
-    }
+    Write-Output "##[section]All files conform to prettier standards!"
 }
 
 <#
@@ -970,7 +940,6 @@ function Test-CodeUsingPSScriptAnalyzer {
 
         Write-Information "##[command]Running PSScriptAnalyzer against '$file'..."
 
-        Invoke-ScriptAnalyzer -Path $file -Settings "$PathToLintersSubmodulesRoot/PSScriptAnalyzerSettings.psd1"
         $output = Invoke-ScriptAnalyzer -Path $file -Settings "$PathToLintersSubmodulesRoot/PSScriptAnalyzerSettings.psd1"
 
         if ($output.Length -gt 0) {
