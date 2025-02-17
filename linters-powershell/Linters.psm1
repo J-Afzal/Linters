@@ -793,7 +793,7 @@ function Test-CodeUsingCSpell {
 
         Write-Information "##[command]Running cspell..."
 
-        (npx -c "cspell $filesToTest --config $PathBackToRepositoryRoot/cspell.yml --unique --show-context --no-progress --no-summary") | ForEach-Object { "##[error]$_" } | Write-Information
+        (npx -c "cspell $($filesToTest | ForEach-Object { "$PathBackToRepositoryRoot/$_" }) --config $PathBackToRepositoryRoot/cspell.yml --unique --show-context --no-progress --no-summary") | ForEach-Object { "##[error]$_" } | Write-Information
 
         if (Assert-ExternalCommandError) {
             Write-Error "##[error]Please resolve the above errors!"
@@ -871,11 +871,11 @@ function Test-CodeUsingPrettier {
 
         Write-Information "##[command]Running prettier..."
 
-        $errors = @(npx -c "prettier $filesToTest --list-different")
+        $errors = @(npx -c "prettier $($filesToTest | ForEach-Object { "$PathBackToRepositoryRoot/$_" }) --list-different")
 
         if ($errors.Length -gt 0) {
             Write-Information "##[error]The following files differ from Prettier formatting:"
-            $errors | ForEach-Object { Write-Information "##[error]    $_" }
+            $errors | ForEach-Object { Write-Information "##[error]    $($_.Substring($PathBackToRepositoryRoot.Length + 1))" }
             Write-Error "##[error]Please resolve the above errors!"
         }
     }
