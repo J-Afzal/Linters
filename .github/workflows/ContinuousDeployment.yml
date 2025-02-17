@@ -20,8 +20,8 @@ jobs:
 
             - name: Create new release
               run: |
-                  $releaseTitle = "Linters"
-                  $currentDateTime = Get-Date -Format "yyyy-MM-dd HH-mm-ss"
-                  gh release create "$releaseTitle-$currentDateTime" --generate-notes --latest --title "$releaseTitle $currentDateTime"
+                  $releaseTitle = "Linters $(Get-Date -Format 'yyyy-MM-dd HH-mm-ss')"
+                  $tagName = "linters-$(Get-Date -Format 'yyyy-MM-dd-HH-mm-ss')"
+                  gh release create $tagName --generate-notes --latest --title $releaseTitle
               env:
                   GH_TOKEN: ${{ github.token }}
