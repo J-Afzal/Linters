@@ -22,6 +22,6 @@ jobs:
               run: |
                   $releaseTitle = "Linters"
                   $currentDateTime = Get-Date -Format "yyyy-MM-dd HH-mm-ss"
-                  gh release create --generate-notes --latest --title "$releaseTitle $currentDateTime"
+                  gh release create "$releaseTitle-$currentDateTime" --generate-notes --latest --title "$releaseTitle $currentDateTime"
               env:
                   GH_TOKEN: ${{ github.token }}
