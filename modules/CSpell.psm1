@@ -3,16 +3,10 @@ $InformationPreference = "Continue"
 
 <#
     .SYNOPSIS
-    Runs cspell against all non-binary files (with exception of the package-lock.json file).
+    Runs cspell against all non-binary files (with exception of the package-lock.json file and any auto-generated docs).
 
     .DESCRIPTION
-    Raises an error if linting errors found.
-
-    .PARAMETER PathToLintersSubmodulesRoot
-    Specifies the path the to the root of the Linters submodule.
-
-    .PARAMETER PathBackToRepositoryRoot
-    Specifies the path need to return to the repository root from the Linters submodule.
+    None.
 
     .INPUTS
     None.
@@ -21,71 +15,47 @@ $InformationPreference = "Continue"
     None.
 
     .EXAMPLE
-    Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
-    Test-CodeUsingCSpell -PathToLintersSubmodulesRoot "./submodules/Linters" -PathBackToRepositoryRoot "." -Verbose
+    Import-Module CSpell.psd1
+    Test-CodeUsingCSpell -Verbose
 #>
 
 function Test-CodeUsingCSpell {
 
     [CmdletBinding()]
-    param(
-        [Parameter(Position = 0, Mandatory = $true)]
-        [String]
-        $PathToLintersSubmodulesRoot,
+    param()
 
-        [Parameter(Position = 1, Mandatory = $true)]
-        [String]
-        $PathBackToRepositoryRoot
-    )
+    Write-Verbose "##[debug]Test-CodeUsingCSpell:  Running Test-CodeUsingCSpell..."
 
-    Write-Verbose "##[debug]Running Test-CodeUsingCSpell..."
-    Write-Verbose "##[debug]Parameters:"
-    Write-Verbose "##[debug]    PathToLintersSubmodulesRoot: $PathToLintersSubmodulesRoot"
-    Write-Verbose "##[debug]    PathBackToRepositoryRoot: $PathBackToRepositoryRoot"
-
-    Write-Information "##[command]Retrieving all files to test against cspell..."
+    Write-Information "##[command]Test-CodeUsingCSpell:  Retrieving all files to test against cspell..."
     $filesToTest = Get-FilteredFilePathsToTest -DirectoryFilterType "Exclude" -DirectoryNameFilterList @("docs/html") -FileNameFilterType "Exclude" -FileNameFilterList @("package-lock") -ExcludeBinaryFiles
 
     if ($null -eq $filesToTest) {
-        Write-Information "##[warning]No files found to lint for cspell! Please check if this is expected!"
+        Write-Information "##[warning]Test-CodeUsingCSpell:  No files found to lint for cspell! Please check if this is expected!"
         return
     }
 
-    Write-Information "##[command]Changing directory to Linters submodule folder..."
-    Set-Location -LiteralPath $PathToLintersSubmodulesRoot
+    Write-Verbose "##[debug]Test-CodeUsingCSpell:  Using the following cspell version..."
+    Invoke-ExternalCommand -ExternalCommand "npx" -ExternalCommandArguments @("cspell", "--version") -ThrowError -Verbose
 
-    try {
-        Write-Verbose "##[debug]Using the following cspell version..."
-        (npx cspell --version) | ForEach-Object { "##[debug]$_" } | Write-Verbose
+    Write-Information "##[command]Test-CodeUsingCSpell:  Running cspell..."
 
-        Write-Information "##[command]Running cspell..."
+    $ExternalCommandArguments = @("cspell") + $filesToTest + @("--config", "./cspell.yml", "--unique", "--show-context", "--no-progress", "--no-summary")
 
-        (npx -c "cspell $($filesToTest | ForEach-Object { "$PathBackToRepositoryRoot/$_" }) --config $PathBackToRepositoryRoot/cspell.yml --unique --show-context --no-progress --no-summary") | ForEach-Object { "##[error]$_" } | Write-Information
-
-        if (Assert-ExternalCommandError) {
-            Write-Error "##[error]Please resolve the above errors!"
-        }
+    if (Invoke-ExternalCommand -ExternalCommand "npx" -ExternalCommandArguments $ExternalCommandArguments -Verbose) {
+        Write-Error "##[error]Test-CodeUsingCSpell:  The above files have cspell formatting errors!"
     }
 
-    catch {
-        throw
+    else {
+        Write-Information "##[section]Test-CodeUsingCSpell:  All files conform to cspell standards!"
     }
-
-    finally {
-        Write-Information "##[command]Changing directory to repository root..."
-        Set-Location -LiteralPath $PathBackToRepositoryRoot
-    }
-
-    Write-Output "##[section]All files conform to cspell standards!"
 }
-
 
 <#
     .SYNOPSIS
     Lints the cspell.yml file.
 
     .DESCRIPTION
-    Raises an error if linting issues are found for the following issues:
+    Raises an error fore any of the following:
         - Invalid version number
         - Invalid language
         - Invalid ordering of keys
@@ -97,7 +67,8 @@ function Test-CodeUsingCSpell {
         - Entries in ignorePaths that are not present in gitignore (with exception of the package-lock.json file)
         - Entries in words and ignoreWords that are not present in the codebase
 
-    This function will also throw errors for cspell.yml files that don't have any dictionaries, ignorePaths, words and ignoreWords entries.
+    This function will also throw errors for cspell.yml files that don't have any dictionaries, ignorePaths, words and
+    ignoreWords entries.
 
     .INPUTS
     None.
@@ -106,7 +77,7 @@ function Test-CodeUsingCSpell {
     None.
 
     .EXAMPLE
-    Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
+    Import-Module CSpell.psd1
     Test-CSpellConfiguration -Verbose
 #>
 
@@ -115,30 +86,31 @@ function Test-CSpellConfiguration {
     [CmdletBinding()]
     param()
 
-    Write-Verbose "##[debug]Running Test-CSpellConfiguration..."
+    Write-Verbose "##[debug]Test-CSpellConfiguration:  Running Test-CSpellConfiguration..."
 
     if (-Not (Test-Path -LiteralPath ./cspell.yml)) {
-        Write-Information "##[warning]No cspell.yml file found at current directory! Please check if this is expected!"
+        Write-Information "##[warning]Test-CSpellConfiguration:  No cspell.yml file found at current directory! Please check if this is expected!"
         return
     }
 
-    Write-Information "##[command]Retrieving contents of cspell.yml..."
+    Write-Information "##[command]Test-CSpellConfiguration:  Retrieving contents of cspell.yml..."
     $cspellFileContents = @(Get-Content -LiteralPath ./cspell.yml)
 
-    Write-Information "##[command]Checking cspell.yml file..."
+    Write-Information "##[command]Test-CSpellConfiguration:  Performing initial check of the cspell.yml file..."
     $lintingErrors = @()
 
     # The below if statements will cause an exception if the file is empty or only a single line. This is fine as the config
     # file is in a useless state if it is empty or only contains a single line, and thus isn't an allowed state.
-    if ($cspellFileContents[0] -ne "version: ""0.2""") {
-        $lintingErrors += @{lineNumber = 1; line = "'$($cspellFileContents[0])'"; errorMessage = "Invalid version number. Expected 'version: ""0.2""'." }
+    if ($cspellFileContents[0] -ne "version: 0.2") {
+        $lintingErrors += @{lineNumber = 1; line = "'$($cspellFileContents[0])'"; errorMessage = "Invalid version number. Expected 'version: 0.2'." }
     }
 
     if ($cspellFileContents[1] -ne "language: en-gb") {
         $lintingErrors += @{lineNumber = 2; line = "'$($cspellFileContents[1])'"; errorMessage = "Invalid language. Expected 'language: en-gb'." }
     }
 
-    Write-Information "##[command]Retrieving 'dictionaries', 'ignorePaths', 'words' and 'ignoreWords'..."
+    Write-Information "##[command]Test-CSpellConfiguration:  Retrieving 'dictionaries', 'ignorePaths', 'words' and 'ignoreWords'..."
+
     $expectedOrderOfKeys = @("version", "language", "dictionaries", "ignorePaths", "words", "ignoreWords")
     $orderOfKeys = @()
 
@@ -153,7 +125,7 @@ function Test-CSpellConfiguration {
         $currentLineNumber = $index + 1
 
         if ($currentLine -eq "") {
-            Write-Verbose "##[debug]Current line is blank: '$currentLine'"
+            Write-Verbose "##[debug]Test-CSpellConfiguration:  Current line is blank: '$currentLine'"
             $lintingErrors += @{lineNumber = $currentLineNumber; line = "'$currentLine'"; errorMessage = "Invalid empty line." }
             continue
         }
@@ -164,7 +136,7 @@ function Test-CSpellConfiguration {
 
             switch ($currentKey) {
                 dictionaries {
-                    Write-Verbose "##[debug]Current line is a 'dictionaries' entry: '$currentLine'"
+                    Write-Verbose "##[debug]Test-CSpellConfiguration:  Current line is a 'dictionaries' entry: '$currentLine'"
 
                     # Assumes an indentation of four characters
                     $entry = $currentLine.TrimStart("    - ")
@@ -177,7 +149,7 @@ function Test-CSpellConfiguration {
                 }
 
                 ignorePaths {
-                    Write-Verbose "##[debug]Current line is an 'ignorePaths' entry: '$currentLine'"
+                    Write-Verbose "##[debug]Test-CSpellConfiguration:  Current line is an 'ignorePaths' entry: '$currentLine'"
 
                     # Assumes an indentation of four characters
                     $entry = $currentLine.TrimStart("    - ")
@@ -190,7 +162,7 @@ function Test-CSpellConfiguration {
                 }
 
                 words {
-                    Write-Verbose "##[debug]Current line is a 'words' entry: '$currentLine'"
+                    Write-Verbose "##[debug]Test-CSpellConfiguration:  Current line is a 'words' entry: '$currentLine'"
 
                     # Assumes an indentation of four characters
                     $entry = $currentLine.TrimStart("    - ")
@@ -208,7 +180,7 @@ function Test-CSpellConfiguration {
                 }
 
                 ignoreWords {
-                    Write-Verbose "##[debug]Current line is an 'ignoreWords' entry: '$currentLine'"
+                    Write-Verbose "##[debug]Test-CSpellConfiguration:  Current line is an 'ignoreWords' entry: '$currentLine'"
 
                     # Assumes an indentation of four characters
                     $entry = $currentLine.TrimStart("    - ")
@@ -226,7 +198,7 @@ function Test-CSpellConfiguration {
                 }
 
                 default {
-                    Write-Verbose "##[debug]Current line is an entry for an unexpected key: '$currentLine'"
+                    Write-Verbose "##[debug]Test-CSpellConfiguration:  Current line is an entry for an unexpected key: '$currentLine'"
 
                     $lintingErrors += @{lineNumber = $currentLineNumber; line = "'$currentLine'"; errorMessage = "Entry for an invalid key." }
                 }
@@ -234,7 +206,7 @@ function Test-CSpellConfiguration {
         }
 
         else {
-            Write-Verbose "##[debug]Current line is a key: '$currentLine'"
+            Write-Verbose "##[debug]Test-CSpellConfiguration:  Current line is a key: '$currentLine'"
 
             $currentKey = $key.Matches[0].Value
 
@@ -250,7 +222,7 @@ function Test-CSpellConfiguration {
         $lintingErrors += @{lineNumber = "-"; line = "-"; errorMessage = "Keys are missing, incorrectly ordered, incorrectly cased, or contain an unexpected key. Expected the following order of keys: 'version', 'language', 'dictionaries', 'ignorePaths', 'words', 'ignoreWords'." }
     }
 
-    Write-Information "##[command]Checking 'dictionaries', 'ignorePaths', 'words' and 'ignoreWords' are alphabetically ordered..."
+    Write-Information "##[command]Test-CSpellConfiguration:  Checking that 'dictionaries', 'ignorePaths', 'words' and 'ignoreWords' are alphabetically ordered..."
 
     if (Compare-ObjectExact -ReferenceObject ($cspellDictionaries | Sort-Object) -DifferenceObject $cspellDictionaries) {
         $lintingErrors += @{lineNumber = "-"; line = "-"; errorMessage = "'dictionaries' is not alphabetically ordered." }
@@ -268,10 +240,10 @@ function Test-CSpellConfiguration {
         $lintingErrors += @{lineNumber = "-"; line = "-"; errorMessage = "'ignoreWords' is not alphabetically ordered." }
     }
 
-    Write-Information "##[command]Checking 'ignorePaths' matches the .gitignore file..."
+    Write-Information "##[command]Test-CSpellConfiguration:  Checking that 'ignorePaths' matches the .gitignore file..."
 
     if (-Not (Test-Path -LiteralPath ./.gitignore)) {
-        Write-Information "##[warning]No .gitignore file found at current directory! Please check if this is expected!"
+        Write-Information "##[warning]Test-CSpellConfiguration:  No .gitignore file found at current directory! Please check if this is expected!"
         $gitignoreFileContents = @()
     }
 
@@ -288,7 +260,7 @@ function Test-CSpellConfiguration {
         $lintingErrors += @{lineNumber = "-"; line = "-"; errorMessage = "'ignorePaths' does not match the entries in .gitignore." }
     }
 
-    Write-Information "##[command]Checking if 'words' are found in 'ignoreWords'..."
+    Write-Information "##[command]Test-CSpellConfiguration:  Checking if 'words' are found in 'ignoreWords'..."
 
     # Re-iterate over cspell file to give line number context
     for ($index = 0; $index -lt $cspellFileContents.Length; $index++) {
@@ -316,9 +288,8 @@ function Test-CSpellConfiguration {
         }
     }
 
-    Write-Information "##[command]Checking for redundant 'words' and 'ignoreWords'..."
+    Write-Information "##[command]Test-CSpellConfiguration:  Checking for redundant 'words' and 'ignoreWords'..."
 
-    Write-Verbose "##[debug]Retrieving all files to check..."
     # Same file list as found in Test-CodeUsingCSpell but also exclude cspell.yml (assumes cspell.yml is the only file with a file name of cspell)
     $allFilesToCheck = Get-FilteredFilePathsToTest -DirectoryFilterType "Exclude" -DirectoryNameFilterList @("docs/html") -FileNameFilterType "Exclude" -FileNameFilterList @("cspell", "package-lock") -ExcludeBinaryFiles
 
@@ -327,7 +298,7 @@ function Test-CSpellConfiguration {
 
     foreach ($file in $allFilesToCheck) {
 
-        Write-Verbose "##[debug]Reading contents of '$file'..."
+        Write-Verbose "##[debug]Test-CSpellConfiguration:  Reading contents of '$file'..."
 
         $fileContents = @(Get-Content -LiteralPath $file)
 
@@ -369,10 +340,10 @@ function Test-CSpellConfiguration {
 
     if ($lintingErrors.Length -gt 0) {
         $lintingErrors | Sort-Object { $_.lineNumber }, { $_.errorMessage } | ForEach-Object { [PSCustomObject]$_ } | Format-Table -AutoSize -Wrap -Property lineNumber, line, errorMessage
-        Write-Error "##[error]Please resolve the above errors!"
+        Write-Error "##[error]Test-CSpellConfiguration:  Please resolve the above errors!"
     }
 
     else {
-        Write-Output "##[section]All cspell.yml tests passed!"
+        Write-Information "##[section]Test-CSpellConfiguration:  All cspell.yml tests passed!"
     }
 }

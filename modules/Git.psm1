@@ -6,7 +6,7 @@ $InformationPreference = "Continue"
     Lints the .gitattributes file.
 
     .DESCRIPTION
-    Raises an error if linting issues are found for the following issues:
+    Raises an error fore any of the following:
         - Duplicate empty lines
         - Duplicate entries
         - Redundant entries
@@ -20,7 +20,7 @@ $InformationPreference = "Continue"
     None.
 
     .EXAMPLE
-    Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
+    Import-Module Git.psd1
     Test-GitattributesFile -Verbose
 #>
 
@@ -29,17 +29,17 @@ function Test-GitAttributesFile {
     [CmdletBinding()]
     param()
 
-    Write-Verbose "##[debug]Running Test-GitattributesFile..."
+    Write-Verbose "##[debug]Test-GitattributesFile:  Running Test-GitattributesFile..."
 
     if (-Not (Test-Path -LiteralPath ./.gitattributes)) {
-        Write-Information "##[warning]No .gitattributes file found at current directory! Please check if this is expected!"
+        Write-Information "##[warning]Test-GitattributesFile:  No .gitattributes file found at current directory! Please check if this is expected!"
         return
     }
 
-    Write-Information "##[command]Retrieving contents of .gitattributes..."
+    Write-Information "##[command]Test-GitattributesFile:  Retrieving contents of .gitattributes..."
     $gitattributesFileContents = @(Get-Content -LiteralPath ./.gitattributes)
 
-    Write-Information "##[command]Retrieving all unique file extensions and unique files without a file extension..."
+    Write-Information "##[command]Test-GitattributesFile:  Retrieving all unique file extensions and unique files without a file extension..."
     $gitTrackedFiles = git ls-files -c | ForEach-Object { if (-Not $_.StartsWith("submodules")) { $_ } } | Split-Path -Leaf # Exclude submodules
 
     $uniqueGitTrackedFileExtensions = $gitTrackedFiles | ForEach-Object { if ($_.Split(".").Length -gt 1) { "\.$($_.Split(".")[-1])" } } | Sort-Object | Select-Object -Unique
@@ -54,15 +54,15 @@ function Test-GitAttributesFile {
         $uniqueGitTrackedFileNamesWithoutExtensions = @()
     }
 
-    Write-Verbose "##[debug]Retrieved unique file extensions:"
-    $uniqueGitTrackedFileExtensions | ForEach-Object { Write-Verbose "##[debug]$($_.TrimStart("\"))" }
+    Write-Verbose "##[debug]Test-GitattributesFile:  Retrieved unique file extensions:"
+    $uniqueGitTrackedFileExtensions | ForEach-Object { Write-Verbose "##[debug]Test-GitattributesFile:  $($_.TrimStart("\"))" }
 
-    Write-Verbose "##[debug]Retrieved unique files without a file extension:"
-    $uniqueGitTrackedFileNamesWithoutExtensions | ForEach-Object { Write-Verbose "##[debug]$_" }
+    Write-Verbose "##[debug]Test-GitattributesFile:  Retrieved unique files without a file extension:"
+    $uniqueGitTrackedFileNamesWithoutExtensions | ForEach-Object { Write-Verbose "##[debug]Test-GitattributesFile:  $_" }
 
     $uniqueGitTrackedFileExtensionsAndFileNamesWithoutExtensions = $uniqueGitTrackedFileExtensions + $uniqueGitTrackedFileNamesWithoutExtensions
 
-    Write-Information "##[command]Checking formatting of .gitattributes file..."
+    Write-Information "##[command]Test-GitattributesFile:  Checking formatting of .gitattributes file..."
     $lintingErrors = @()
     $foundEntries = @()
     $previousLineWasBlank = $false
@@ -74,7 +74,7 @@ function Test-GitAttributesFile {
         $currentLineNumber = $index + 1
 
         if ($currentLine -eq "") {
-            Write-Verbose "##[debug]Current line is blank: '$currentLine'"
+            Write-Verbose "##[debug]Test-GitattributesFile:  Current line is blank: '$currentLine'"
 
             if ($previousLineWasBlank) {
                 $lintingErrors += @{lineNumber = $currentLineNumber; line = "'$currentLine'"; errorMessage = "Duplicate blank line." }
@@ -88,7 +88,7 @@ function Test-GitAttributesFile {
         $lineBeforeAndIncludingComment = $currentLine | Select-String -Pattern ".*#"
 
         if ($null -eq $lineBeforeAndIncludingComment) {
-            Write-Verbose "##[debug]Current line is code: '$currentLine'"
+            Write-Verbose "##[debug]Test-GitattributesFile:  Current line is code: '$currentLine'"
 
             if (-Not (
                     $currentLine -Match "^\* +text=auto +eol=lf$" -or
@@ -139,18 +139,18 @@ function Test-GitAttributesFile {
         }
 
         elseif ($lineBeforeAndIncludingComment.Matches.Value.Length -eq 1) {
-            Write-Verbose "##[debug]Current line is comment: '$currentLine'"
+            Write-Verbose "##[debug]Test-GitattributesFile:  Current line is comment: '$currentLine'"
         }
 
         else {
-            Write-Verbose "##[debug]Current line is a mixture of comment and code: '$currentLine'"
+            Write-Verbose "##[debug]Test-GitattributesFile:  Current line is a mixture of comment and code: '$currentLine'"
             $lintingErrors += @{lineNumber = $currentLineNumber; line = "'$currentLine'"; errorMessage = "Lines must be blank, entirely comment or entirely non-comment." }
         }
 
         $previousLineWasBlank = $false
     }
 
-    Write-Information "##[command]Checking all unique file extensions and files without extensions have a .gitattributes entry:"
+    Write-Information "##[command]Test-GitattributesFile:  Checking all unique file extensions and files without extensions have a .gitattributes entry:"
 
     foreach ($fileExtensionOrFileNameWithoutExtension in $uniqueGitTrackedFileExtensionsAndFileNamesWithoutExtensions) {
 
@@ -159,7 +159,7 @@ function Test-GitAttributesFile {
         foreach ($line in $gitattributesFileContentsWithoutComments) {
 
             if ($line -Match $fileExtensionOrFileNameWithoutExtension ) {
-                Write-Verbose "##[debug]$fileExtension entry found in: '$line'"
+                Write-Verbose "##[debug]Test-GitattributesFile:  $fileExtension entry found in: '$line'"
                 $foundMatch = $true
                 break
             }
@@ -172,11 +172,11 @@ function Test-GitAttributesFile {
 
     if ($lintingErrors.Length -gt 0) {
         $lintingErrors | Sort-Object { $_.lineNumber }, { $_.errorMessage } | ForEach-Object { [PSCustomObject]$_ } | Format-Table -AutoSize -Wrap -Property lineNumber, line, errorMessage
-        Write-Error "##[error]Please resolve the above errors!"
+        Write-Error "##[error]Test-GitattributesFile:  Please resolve the above errors!"
     }
 
     else {
-        Write-Output "##[section]All .gitattributes tests passed!"
+        Write-Information "##[section]Test-GitattributesFile:  All .gitattributes tests passed!"
     }
 }
 
@@ -185,7 +185,7 @@ function Test-GitAttributesFile {
     Lints the .gitignore file.
 
     .DESCRIPTION
-    Raises an error if linting issues are found for the following issues:
+    Raises an error fore any of the following:
         - Duplicate empty lines
         - Duplicate entries
         - Not alphabetically ordered
@@ -197,7 +197,7 @@ function Test-GitAttributesFile {
     None.
 
     .EXAMPLE
-    Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
+    Import-Module Git.psd1
     Test-GitIgnoreFile -Verbose
 #>
 
@@ -206,17 +206,17 @@ function Test-GitIgnoreFile {
     [CmdletBinding()]
     param()
 
-    Write-Verbose "##[debug]Running Test-GitIgnoreFile..."
+    Write-Verbose "##[debug]Test-GitIgnoreFile:  Running Test-GitIgnoreFile..."
 
     if (-Not (Test-Path -LiteralPath ./.gitignore)) {
-        Write-Information "##[warning]No .gitignore file found at current directory! Please check if this is expected!"
+        Write-Information "##[warning]Test-GitIgnoreFile:  No .gitignore file found at current directory! Please check if this is expected!"
         return
     }
 
-    Write-Information "##[command]Retrieving contents of .gitignore..."
+    Write-Information "##[command]Test-GitIgnoreFile:  Retrieving contents of .gitignore..."
     $gitignoreFileContents = @(Get-Content -LiteralPath ./.gitignore)
 
-    Write-Information "##[command]Checking formatting of .gitignore file..."
+    Write-Information "##[command]Test-GitIgnoreFile:  Checking formatting of .gitignore file..."
     $lintingErrors = @()
     $foundEntries = @()
 
@@ -226,7 +226,7 @@ function Test-GitIgnoreFile {
         $currentLineNumber = $index + 1
 
         if ($currentLine -eq "") {
-            Write-Verbose "##[debug]Current line is blank: '$currentLine'"
+            Write-Verbose "##[debug]Test-GitIgnoreFile:  Current line is blank: '$currentLine'"
 
             if ($previousLineWasBlank) {
                 $lintingErrors += @{lineNumber = $currentLineNumber; line = "'$currentLine'"; errorMessage = "Duplicate blank line." }
@@ -240,7 +240,7 @@ function Test-GitIgnoreFile {
             $lineBeforeAndIncludingComment = $currentLine | Select-String -Pattern ".*#"
 
             if ($null -eq $lineBeforeAndIncludingComment) {
-                Write-Verbose "##[debug]Current line is code: '$currentLine'"
+                Write-Verbose "##[debug]Test-GitIgnoreFile:  Current line is code: '$currentLine'"
 
                 if ($foundEntries.Contains($currentLine)) {
                     $lintingErrors += @{lineNumber = $currentLineNumber; line = "'$currentLine'"; errorMessage = "Duplicate entry." }
@@ -250,11 +250,11 @@ function Test-GitIgnoreFile {
             }
 
             elseif ($lineBeforeAndIncludingComment.Matches.Value.Length -eq 1) {
-                Write-Verbose "##[debug]Current line is comment: '$currentLine'"
+                Write-Verbose "##[debug]Test-GitIgnoreFile:  Current line is comment: '$currentLine'"
             }
 
             else {
-                Write-Verbose "##[debug]Current line is a mixture of comment and code: '$line'"
+                Write-Verbose "##[debug]Test-GitIgnoreFile:  Current line is a mixture of comment and code: '$line'"
                 $lintingErrors += @{lineNumber = $currentLineNumber; line = "'$currentLine'"; errorMessage = "Line must be blank, entirely comment or entirely non-comment." }
             }
 
@@ -262,7 +262,7 @@ function Test-GitIgnoreFile {
         }
     }
 
-    Write-Information "##[command]Checking all entries are alphabetically ordered..."
+    Write-Information "##[command]Test-GitIgnoreFile:  Checking all entries are alphabetically ordered..."
 
     if ($foundEntries.Length -gt 1) {
 
@@ -275,10 +275,10 @@ function Test-GitIgnoreFile {
 
     if ($lintingErrors.Length -gt 0) {
         $lintingErrors | Sort-Object { $_.lineNumber }, { $_.errorMessage } | ForEach-Object { [PSCustomObject]$_ } | Format-Table -AutoSize -Wrap -Property lineNumber, line, errorMessage
-        Write-Error "##[error]Please resolve the above errors!"
+        Write-Error "##[error]Test-GitIgnoreFile:  Please resolve the above errors!"
     }
 
     else {
-        Write-Output "##[section]All .gitignore tests passed!"
+        Write-Information "##[section]Test-GitIgnoreFile:  All .gitignore tests passed!"
     }
 }

@@ -1,13 +1,12 @@
 @{
-
     # Script module or binary module file associated with this manifest.
-    RootModule        = 'Doxygen.psm1'
+    RootModule        = 'Helpers.psm1'
 
     # Version number of this module.
     ModuleVersion     = '1.0'
 
     # ID used to uniquely identify this module
-    GUID              = 'cb71c311-8da2-4c32-80db-8cde1ec8f5f1'
+    GUID              = '16d040b5-de7b-45e8-bbf2-2b5969abaf59'
 
     # Author of this module
     Author            = 'J-Afzal'
@@ -19,11 +18,16 @@
     Copyright         = '(c) J-Afzal. All rights reserved.'
 
     # Description of the functionality provided by this module
-    Description       = 'Provides linting functions for doxygen documentation.'
+    Description       = 'Provides helper functions for linting.'
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
     FunctionsToExport = @(
-        'Test-DoxygenDocumentation'
+        'Assert-ExternalCommandError',
+        'Compare-ObjectExact',
+        'Get-AllBinaryFiles',
+        'Get-AllFilePathsToTest',
+        'Get-FilteredFilePathsToTest',
+        'Invoke-ExternalCommand'
     )
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
@@ -31,5 +35,4 @@
 
     # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
     AliasesToExport   = @()
-
 }

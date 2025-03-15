@@ -3,13 +3,13 @@ $InformationPreference = "Continue"
 
 <#
     .SYNOPSIS
-    Asserts whether an error when an external function has thrown an error via LASTEXITCODE.
+    Asserts whether an external command has thrown an error via LASTEXITCODE.
 
     .DESCRIPTION
-    This function must be called immediately after the external function call.
+    This function must be called immediately after the external command call.
 
     .PARAMETER ThrowError
-    Specifies whether to throw an error if an error is detected. If not specified a boolean will be returned instead.
+    Whether to throw an error if an error is detected. If not specified, a boolean will be returned instead.
 
     .INPUTS
     None.
@@ -18,7 +18,7 @@ $InformationPreference = "Continue"
     None.
 
     .EXAMPLE
-    Import-Module Linters.psd1 -Force
+    Import-Module Helpers.psd1 -Force
     npm install
     Assert-ExternalCommandError -ThrowError -Verbose
 #>
@@ -56,7 +56,7 @@ function Assert-ExternalCommandError {
 
 <#
     .SYNOPSIS
-    Compares two objects.
+    Compares two objects and returns all differences between them.
 
     .DESCRIPTION
     Compare-Object was not sufficient as it disregards the order of the DifferenceObject.
@@ -74,7 +74,7 @@ function Assert-ExternalCommandError {
     Object[] A list of error messages.
 
     .EXAMPLE
-    Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
+    Import-Module Helpers.psd1
 
     $arrayOne = @(1,2,3)
     $arrayTwo = @(1,3,2)
@@ -96,28 +96,28 @@ function Compare-ObjectExact {
         $DifferenceObject
     )
 
-    Write-Verbose "##[debug]Running Compare-ObjectExact..."
-    Write-Verbose "##[debug]Parameters:"
-    Write-Verbose "##[debug]    ReferenceObject:"
-    $ReferenceObject | ForEach-Object { Write-Verbose "##[debug]        $_" }
+    Write-Verbose "##[debug]Compare-ObjectExact:  Running Compare-ObjectExact..."
+    Write-Verbose "##[debug]Compare-ObjectExact:  Parameters:"
+    Write-Verbose "##[debug]Compare-ObjectExact      ReferenceObject:"
+    $ReferenceObject | ForEach-Object { Write-Verbose "##[debug]Compare-ObjectExact:          $_" }
     Write-Verbose "##[debug]    DifferenceObject:"
-    $DifferenceObject | ForEach-Object { Write-Verbose "##[debug]        $_" }
+    $DifferenceObject | ForEach-Object { Write-Verbose "##[debug]Compare-ObjectExact:          $_" }
 
-    [Collections.Generic.List[String]] $errors = @()
+    [Collections.Generic.List[String]] $differences = @()
 
     for ($index = 0; $index -lt $ReferenceObject.Length; $index++) {
 
         try {
 
             if ($ReferenceObject[$index] -ne $DifferenceObject[$index]) {
-                $errors.Add("'$($DifferenceObject[$index])' found instead of '$($ReferenceObject[$index])'.")
+                $differences.Add("'$($DifferenceObject[$index])' found instead of '$($ReferenceObject[$index])'.")
             }
         }
 
         catch {
 
             # Assuming that this is caused by an index out of bounds error with DifferenceObject
-            $errors.Add("'$($ReferenceObject[$index])' was not found.")
+            $differences.Add("'$($ReferenceObject[$index])' was not found.")
 
         }
     }
@@ -126,14 +126,14 @@ function Compare-ObjectExact {
 
         for ($index = $ReferenceObject.Length; $index -lt $DifferenceObject.Length; $index++) {
 
-            $errors.Add("An extra value of '$($DifferenceObject[$index])' found.")
+            $differences.Add("An extra value of '$($DifferenceObject[$index])' found.")
         }
     }
 
-    Write-Verbose "##[debug]Compare-ObjectExact returning:"
-    $errors | ForEach-Object { Write-Verbose "##[debug]    $_" }
+    Write-Verbose "##[debug]Compare-ObjectExact:  Returning:"
+    $differences | ForEach-Object { Write-Verbose "##[debug]Compare-ObjectExact:      $_" }
 
-    return $errors
+    return $differences
 }
 
 <#
@@ -150,7 +150,7 @@ function Compare-ObjectExact {
     None.
 
     .EXAMPLE
-    Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
+    Import-Module Helpers.psd1
     Get-AllBinaryFiles -Verbose
 #>
 
@@ -160,10 +160,10 @@ function Get-AllBinaryFiles {
     [OutputType([Object[]])]
     param()
 
-    Write-Verbose "##[debug]Running Get-AllBinaryFiles..."
+    Write-Verbose "##[debug]Get-AllBinaryFiles:  Running Get-AllBinaryFiles..."
 
     if (-Not (Test-Path -LiteralPath ./.gitattributes)) {
-        Write-Information "##[warning]No .gitattributes file found at current directory! Please check if this is expected!"
+        Write-Information "##[warning]Get-AllBinaryFiles:  No .gitattributes file found at current directory! Please check if this is expected!"
         return
     }
 
@@ -183,7 +183,7 @@ function Get-AllBinaryFiles {
             }
 
             else {
-                Write-Information "##[warning]'$currentLine' matched as a file extension but failed to extract."
+                Write-Information "##[warning]Get-AllBinaryFiles:  '$currentLine' matched as a file extension but failed to extract."
             }
         }
 
@@ -197,13 +197,12 @@ function Get-AllBinaryFiles {
             }
 
             else {
-                Write-Information "##[warning]'$currentLine' matched as a file without an extension but failed to extract."
+                Write-Information "##[warning]Get-AllBinaryFiles:  '$currentLine' matched as a file without an extension but failed to extract."
             }
         }
     }
 
-    $allFiles = git ls-files -c
-    Assert-ExternalCommandError -ThrowError
+    $allFiles = Invoke-ExternalCommand -ExternalCommand "git" -ExternalCommandArguments @("ls-files", "-c") -ReturnCommandOutput -ThrowError
 
     $allBinaryFiles = @()
 
@@ -240,8 +239,8 @@ function Get-AllBinaryFiles {
         }
     }
 
-    Write-Verbose "##[debug]Get-AllBinaryFiles returning:"
-    $allBinaryFiles | ForEach-Object { Write-Verbose "##[debug]    $_" }
+    Write-Verbose "##[debug]Get-AllBinaryFiles:  Returning:"
+    $allBinaryFiles | ForEach-Object { Write-Verbose "##[debug]Get-AllBinaryFiles:      $_" }
 
     return $allBinaryFiles
 }
@@ -263,7 +262,7 @@ function Get-AllBinaryFiles {
     Object[] A list of file paths (relative to the root of the repository).
 
     .EXAMPLE
-    Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
+    Import-Module Helpers.psd1
     Get-AllFilePathsToTest -ExcludeBinaryFiles -Verbose
 #>
 
@@ -277,14 +276,14 @@ function Get-AllFilePathsToTest {
         $ExcludeBinaryFiles = $false
     )
 
-    Write-Verbose "##[debug]Running Get-AllFilePathsToTest..."
-    Write-Verbose "##[debug]Parameters:"
-    Write-Verbose "##[debug]    ExcludeBinaryFiles: $ExcludeBinaryFiles"
+    Write-Verbose "##[debug]Get-AllFilePathsToTest:  Running Get-AllFilePathsToTest..."
+    Write-Verbose "##[debug]Get-AllFilePathsToTest:  Parameters:"
+    Write-Verbose "##[debug]Get-AllFilePathsToTest:      ExcludeBinaryFiles: $ExcludeBinaryFiles"
 
     $allFilesToTest = Get-FilteredFilePathsToTest -DirectoryFilterType "Exclude" -DirectoryNameFilterList @("nothing") -FileNameFilterType "Exclude" -FileNameFilterList @("nothing") -FileExtensionFilterType "Exclude" -FileExtensionFilterList @("nothing") -ExcludeBinaryFiles:$ExcludeBinaryFiles
 
-    Write-Verbose "##[debug]Get-AllFilePathsToTest returning:"
-    $allFilesToTest | ForEach-Object { Write-Verbose "##[debug]    $_" }
+    Write-Verbose "##[debug]Get-AllFilePathsToTest:  Returning:"
+    $allFilesToTest | ForEach-Object { Write-Verbose "##[debug]Get-AllFilePathsToTest:      $_" }
 
     return $allFilesToTest
 }
@@ -326,7 +325,7 @@ function Get-AllFilePathsToTest {
     Object[] A list of file paths (relative to the root of the repository).
 
     .EXAMPLE
-    Import-Module ./submodules/Linters/linters-powershell/Linters.psd1
+    Import-Module Helpers.psd1
 
     Get-FilteredFilePathsToTest -DirectoryFilterType "Exclude" -DirectoryNameFilterList @("docs/html") \
                                 -FileNameFilterType "Exclude" -FileNameFilterList @("cspell", "package-lock") \
@@ -389,21 +388,20 @@ function Get-FilteredFilePathsToTest {
         $ExcludeBinaryFiles = $false
     )
 
-    Write-Verbose "##[debug]Running Get-FilteredFilePathsToTest..."
-    Write-Verbose "##[debug]Parameters:"
-    Write-Verbose "##[debug]    DirectoryFilterType: $DirectoryFilterType"
-    Write-Verbose "##[debug]    DirectoryNameFilterList:"
-    $DirectoryNameFilterList | ForEach-Object { Write-Verbose "##[debug]        $_" }
-    Write-Verbose "##[debug]    FileNameFilterType: $FileNameFilterType"
-    Write-Verbose "##[debug]    FileNameFilterList:"
-    $FileNameFilterList | ForEach-Object { Write-Verbose "##[debug]        $_" }
-    Write-Verbose "##[debug]    FileExtensionFilterType: $FileExtensionFilterType"
-    Write-Verbose "##[debug]    FileExtensionFilterList:"
-    $FileExtensionFilterList | ForEach-Object { Write-Verbose "##[debug]        $_" }
-    Write-Verbose "##[debug]    ExcludeBinaryFiles: $ExcludeBinaryFiles"
+    Write-Verbose "##[debug]Get-FilteredFilePathsToTest:  Running Get-FilteredFilePathsToTest..."
+    Write-Verbose "##[debug]Get-FilteredFilePathsToTest:  Parameters:"
+    Write-Verbose "##[debug]Get-FilteredFilePathsToTest:      DirectoryFilterType: $DirectoryFilterType"
+    Write-Verbose "##[debug]Get-FilteredFilePathsToTest:      DirectoryNameFilterList:"
+    $DirectoryNameFilterList | ForEach-Object { Write-Verbose "##[debug]Get-FilteredFilePathsToTest:          $_" }
+    Write-Verbose "##[debug]Get-FilteredFilePathsToTest:      FileNameFilterType: $FileNameFilterType"
+    Write-Verbose "##[debug]Get-FilteredFilePathsToTest:      FileNameFilterList:"
+    $FileNameFilterList | ForEach-Object { Write-Verbose "##[debug]Get-FilteredFilePathsToTest:          $_" }
+    Write-Verbose "##[debug]Get-FilteredFilePathsToTest:      FileExtensionFilterType: $FileExtensionFilterType"
+    Write-Verbose "##[debug]Get-FilteredFilePathsToTest:      FileExtensionFilterList:"
+    $FileExtensionFilterList | ForEach-Object { Write-Verbose "##[debug]Get-FilteredFilePathsToTest:          $_" }
+    Write-Verbose "##[debug]Get-FilteredFilePathsToTest:      ExcludeBinaryFiles: $ExcludeBinaryFiles"
 
-    $allFiles = git ls-files -c
-    Assert-ExternalCommandError -ThrowError
+    $allFiles = Invoke-ExternalCommand -ExternalCommand "git" -ExternalCommandArguments @("ls-files", "-c") -ReturnCommandOutput -ThrowError
 
     $allBinaryFiles = Get-AllBinaryFiles
     $filteredFilesToTest = @()
@@ -466,8 +464,8 @@ function Get-FilteredFilePathsToTest {
         $filteredFilesToTest += $file
     }
 
-    Write-Verbose "##[debug]Get-FilteredFilePathsToTest returning:"
-    $filteredFilesToTest | ForEach-Object { Write-Verbose "##[debug]    $_" }
+    Write-Verbose "##[debug]Get-FilteredFilePathsToTest:  Returning:"
+    $filteredFilesToTest | ForEach-Object { Write-Verbose "##[debug]Get-FilteredFilePathsToTest:      $_" }
 
     return $filteredFilesToTest
 }
@@ -479,17 +477,30 @@ function Get-FilteredFilePathsToTest {
     .DESCRIPTION
     TODO
 
+    .PARAMETER ExternalCommand
+    The external command to invoke.
+
+    .PARAMETER ExternalCommandArguments
+    The arguments to pass to the external command.
+
+    .PARAMETER ReturnCommandOutput
+    Whether to return the output of the command.
+
     .PARAMETER ThrowError
-    TODO
+    Whether to throw an error if an error is detected. If not specified, a boolean will be returned instead if
+    ReturnCommandOutput is not specified.
 
     .INPUTS
-    TODO.
+    None.
 
     .OUTPUTS
-    TODO.
+    Boolean. If neither ThrowError nor ReturnCommandOutput are specified this value represents whether the external command
+    has thrown an error.
+    Object[]. If ReturnCommandOutput is specified this value represents the output of the external command.
 
     .EXAMPLE
-    TODO
+    Import-Module Helpers.psd1
+    Invoke-ExternalCommand -ExternalCommand "npx" -ExternalCommandArguments @("cspell", "--version") -ReturnCommandOutput -ThrowError -Verbose
 #>
 
 function Invoke-ExternalCommand {
@@ -500,16 +511,35 @@ function Invoke-ExternalCommand {
         [String]
         $ExternalCommand,
 
-        [Parameter(Position = 1, ValueFromRemainingArguments = $true)]
+        [Parameter(Position = 1, Mandatory = $true)]
         [Object[]]
-        $PassThruArgs,
+        $ExternalCommandArguments,
 
         [Parameter(Position = 2, Mandatory = $false)]
+        [Switch]
+        $ReturnCommandOutput = $false,
+
+        [Parameter(Position = 3, Mandatory = $false)]
         [Switch]
         $ThrowError = $false
     )
 
-    & $ExternalCommand @PassThruArgs
+    Write-Verbose "##[debug]Invoke-ExternalCommand:  Running Invoke-ExternalCommand..."
+    Write-Verbose "##[debug]Invoke-ExternalCommand:  Parameters:"
+    Write-Verbose "##[debug]Invoke-ExternalCommand:      ExternalCommand     : $ExternalCommand"
+    Write-Verbose "##[debug]Invoke-ExternalCommand:      ExternalCommandArguments:"
+    $ExternalCommandArguments | ForEach-Object { Write-Verbose "##[debug]Invoke-ExternalCommand:          $_" }
+    Write-Verbose "##[debug]Invoke-ExternalCommand:      ReturnCommandOutput : $ReturnCommandOutput"
+    Write-Verbose "##[debug]Invoke-ExternalCommand:      ThrowError          : $ThrowError"
 
-    return Assert-ExternalCommandError -ThrowError:$ThrowError
+    if ($ReturnCommandOutput) {
+        $output = (& $ExternalCommand @ExternalCommandArguments 2>&1)
+        Assert-ExternalCommandError -ThrowError:$ThrowError
+        return $output
+    }
+
+    else {
+        (& $ExternalCommand @ExternalCommandArguments 2>&1) | ForEach-Object { Write-Verbose "##[debug]Invoke-ExternalCommand:  $_" }
+        return Assert-ExternalCommandError -ThrowError:$ThrowError
+    }
 }
