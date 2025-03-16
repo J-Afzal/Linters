@@ -85,37 +85,37 @@ jobs:
             - name: Run gitignore linter
               if: (success() || failure()) && steps.dependencies.outcome == 'success'
               run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/Git.psd1
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/modules/Git.psd1
                   Test-GitIgnoreFile -Verbose
 
             - name: Run gitattributes linter
               if: (success() || failure()) && steps.dependencies.outcome == 'success'
               run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/Git.psd1
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/modules/Git.psd1
                   Test-GitAttributesFile -Verbose
 
             - name: Run cspell configuration linter
               if: (success() || failure()) && steps.dependencies.outcome == 'success'
               run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/CSpell.psd1
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/modules/CSpell.psd1
                   Test-CSpellConfiguration -Verbose
 
             - name: Run cspell
               if: (success() || failure()) && steps.dependencies.outcome == 'success'
               run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/CSpell.psd1
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/modules/CSpell.psd1
                   Test-CodeUsingCSpell -Verbose
 
             - name: Run prettier
               if: (success() || failure()) && steps.dependencies.outcome == 'success'
               run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/Prettier.psd1
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/modules/Prettier.psd1
                   Test-CodeUsingPrettier -Verbose
 
             - name: Run PSScriptAnalyzer
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_powershell_linters
               run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/PSScriptAnalyzer.psd1
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/modules/PSScriptAnalyzer.psd1
                   Test-CodeUsingPSScriptAnalyzer -Verbose
 
             - name: Check doxygen documentation is up-to-date
