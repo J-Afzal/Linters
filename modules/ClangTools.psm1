@@ -183,15 +183,27 @@ function Test-CodeUsingGenericClangTool {
 
     foreach ($file in $filesToTest) {
 
+        switch ($ClangTool) {
+            clang-format {
+                $clangToolArguments = @("--style=file:./.clang-format", "--Werror", "--dry-run", $file)
+                $clangToolFixArguments = @("--style=file:./.clang-format", "--Werror", "--i", $file)
+            }
+
+            clang-tidy {
+                $clangToolArguments = @("--config-file", "./.clang-tidy", "-p", "./build", $file)
+                $clangToolFixArguments = @("--config-file", "./.clang-tidy", "-p", "./build", "--fix", $file)
+            }
+        }
+
         Write-Information "##[command]Test-CodeUsingGenericClangTool:  Running '$ClangTool' against '$file'..."
 
-        if (Invoke-ExternalCommand -ExternalCommand $ClangToolPath -ExternalCommandArguments @("--config-file", "./.$ClangTool", $file, "-p", "./build") -Verbose) {
+        if (Invoke-ExternalCommand -ExternalCommand $ClangToolPath -ExternalCommandArguments $clangToolArguments -Verbose) {
 
             if ($FixClangToolErrors) {
 
                 Write-Verbose "##[command]Test-CodeUsingGenericClangTool:  Attempting to fix '$ClangTool' within '$file'..."
 
-                if (Invoke-ExternalCommand -ExternalCommand $ClangToolPath -ExternalCommandArguments @("--config-file", "./.$ClangTool", $file, "-p", "./build") -Verbose) {
+                if (Invoke-ExternalCommand -ExternalCommand $ClangToolPath -ExternalCommandArguments $clangToolFixArguments -Verbose) {
                     Write-Verbose "##[debug]Test-CodeUsingGenericClangTool:  '$ClangTool' errors still exist in '$file'!"
                     $filesWithErrors += $file
                 }
