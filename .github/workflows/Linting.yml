@@ -1,12 +1,9 @@
-name: Linting (PowerShell)
+name: Linting
 
 on:
     workflow_call:
         inputs:
             path_to_linters_submodule_root:
-                required: true
-                type: string
-            path_back_to_repository_root:
                 required: true
                 type: string
             run_powershell_linters:
@@ -25,7 +22,10 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                os: [macos-latest, ubuntu-latest, windows-latest]
+                os:
+                    - macos-latest
+                    - ubuntu-latest
+                    - windows-latest
 
         defaults:
             run:
@@ -43,11 +43,11 @@ jobs:
               run: |
                   echo "##[section]Installing linting dependencies..."
 
-                  echo "##[command]Changing directory to Linters submodule folder..."
-                  cd ${{ inputs.path_to_linters_submodule_root }}
-
                   echo "##[command]Installing npm dependencies..."
-                  npm install
+                  npm install ${{ inputs.path_to_linters_submodule_root }}
+
+                  echo "##[command]Installing python dependencies..."
+                  pip install -r ./requirements.txt
 
                   if [ ${{ inputs.run_cpp_linters }} == true ]
                   then
@@ -85,65 +85,44 @@ jobs:
             - name: Run gitignore linter
               if: (success() || failure()) && steps.dependencies.outcome == 'success'
               run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/modules/Git.psd1
                   Test-GitIgnoreFile -Verbose
 
             - name: Run gitattributes linter
               if: (success() || failure()) && steps.dependencies.outcome == 'success'
               run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/modules/Git.psd1
                   Test-GitAttributesFile -Verbose
 
             - name: Run cspell configuration linter
               if: (success() || failure()) && steps.dependencies.outcome == 'success'
               run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/modules/CSpell.psd1
                   Test-CSpellConfiguration -Verbose
 
             - name: Run cspell
               if: (success() || failure()) && steps.dependencies.outcome == 'success'
               run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
-                  Test-CodeUsingCSpell -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -PathBackToRepositoryRoot ${{ inputs.path_back_to_repository_root }} -Verbose
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/modules/CSpell.psd1
+                  Test-CodeUsingCSpell -Verbose
 
             - name: Run prettier
               if: (success() || failure()) && steps.dependencies.outcome == 'success'
               run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
-                  Test-CodeUsingPrettier -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -PathBackToRepositoryRoot ${{ inputs.path_back_to_repository_root }} -Verbose
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/modules/Prettier.psd1
+                  Test-CodeUsingPrettier -Verbose
 
             - name: Run PSScriptAnalyzer
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_powershell_linters
               run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
-                  Test-CodeUsingPSScriptAnalyzer -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/modules/PSScriptAnalyzer.psd1
+                  Test-CodeUsingPSScriptAnalyzer -Verbose
 
-            # Needed for the Build-CppCodeUsingCMake command.
-            - uses: ilammy/msvc-dev-cmd@v1
-              if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters && ${{ matrix.os }} == 'windows-latest'
-
-            - name: Run clang tools
+            - name: Check doxygen documentation is up-to-date
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters
               run: |
-                  # Configure CMake to create the "compile_commands.json" file
-                  Import-Module ./modules/Build.psd1
-                  Build-CppCodeUsingCMake -Platform ${{ matrix.os }} -BuildType Release -BuildDirectory build -Parallel 8 -ConfigureOnly -Verbose
-
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
-                  Test-CodeUsingClangTools -Platform ${{ matrix.os }} -PathToLintersSubmodulesRoot ${{ inputs.path_to_linters_submodule_root }} -Verbose
-
-            - name: Check doxygen documentation is updated
-              if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters
-              run: |
-                  # No idea why but other platforms always result in a diff.
-                  if ("${{ matrix.os }}" -eq "macos-latest") {
-                      Import-Module ${{ inputs.path_to_linters_submodule_root }}/linters-powershell/Linters.psd1
-                      Test-DoxygenDocumentation -Verbose
-                  }
-
-                  else {
-                      Write-Information "##[section]${{ matrix.os }} is not supported by this step."
-                  }
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/modules/Doxygen.psd1
+                  Test-DoxygenDocumentation -Platform ${{ matrix.os }} -Verbose
 
             - name: Upload doxygen documentation
               uses: actions/upload-artifact@v4
@@ -151,3 +130,23 @@ jobs:
               with:
                   name: doxygen-docs-${{ matrix.os }}
                   path: ./docs/html/
+
+            - name: Run clang-format
+              if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters
+              run: |
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/modules/ClangTools.psd1
+                  Test-CodeUsingClangFormat -Platform ${{ matrix.os }} -Verbose
+
+            # Needed for the Build-CppCodeUsingCMake command.
+            - uses: ilammy/msvc-dev-cmd@v1
+              if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters && ${{ matrix.os }} == 'windows-latest'
+
+            - name: Run clang-tidy
+              if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters
+              run: |
+                  # Configure CMake to create the "compile_commands.json" file
+                  Import-Module ./modules/Build.psd1
+                  Build-CppCodeUsingCMake -Platform ${{ matrix.os }} -BuildType Release -BuildDirectory build -Parallel 8 -ConfigureOnly -Verbose
+
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/modules/ClangTools.psd1
+                  Test-CodeUsingClangTidy -Platform ${{ matrix.os }} -Verbose

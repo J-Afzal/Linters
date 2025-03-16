@@ -10,6 +10,7 @@
 
 # Documents
 *.md            text        diff=markdown
+*.txt           text
 LICENSE         text
 
 # Scripts

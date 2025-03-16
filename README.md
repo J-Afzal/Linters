@@ -28,3 +28,6 @@ The following dependencies need to be installed:
 On Windows, Visual Studio 2022 can be used by opening the folder as a CMake project and Visual Studio Code can be used by
 opening the folder through the `Developer PowerShell for VS` (otherwise you may see errors around cl.exe not being found when
 configuring CMake for the clang-based linters).
+
+<!-- TODO: markdownlint make config verbose for all rules -->
+<!-- Check CI passes and copy config to other repos -->
