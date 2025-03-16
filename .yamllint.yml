@@ -61,5 +61,5 @@ rules:
         allow-quoted-quotes: false
         check-keys: false
     truthy:
-        allowed-values: ['true', 'false']
+        allowed-values: ["true", "false"]
         check-keys: false
