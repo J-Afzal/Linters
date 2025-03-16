@@ -1,4 +1,4 @@
-Checks: '*, \
+Checks: "*, \
     -abseil-*, \
     -altera-*, \
     -android-*, \
@@ -25,7 +25,7 @@ Checks: '*, \
     -objc-*, \
     -openmp-*, \
     -readability-qualified-auto, \
-    -zircon-*'
+    -zircon-*"
 WarningsAsErrors: "*"
 CheckOptions:
     - key: readability-inconsistent-declaration-parameter-name.Strict
