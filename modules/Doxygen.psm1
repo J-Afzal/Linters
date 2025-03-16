@@ -44,7 +44,7 @@ function Test-DoxygenDocumentation {
 
     # No idea why but other platforms always result in a diff.
     if ($Platform -ne "macos-latest") {
-        Write-Information "##[section]The platform '$Platform' is not supported!"
+        Write-Information "##[section]Test-DoxygenDocumentation:  The platform '$Platform' is not supported!"
         return
     }
 

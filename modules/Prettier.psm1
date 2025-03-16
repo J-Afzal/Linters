@@ -27,7 +27,7 @@ function Test-CodeUsingPrettier {
     Write-Verbose "##[debug]Test-CodeUsingPrettier:  Running Test-CodeUsingPrettier..."
 
     Write-Information "##[command]Test-CodeUsingPrettier:  Retrieving all files to test against prettier..."
-    $filesToTest = Get-FilteredFilePathsToTest -FileNameFilterType "Exclude" -FileNameFilterList @("package-lock") -FileExtensionFilterType "Include" -FileExtensionFilterList @("clang-format", "clang-tidy", "json", "md", "yml")
+    $filesToTest = Get-FilteredFilePathsToTest -FileNameFilterType "Exclude" -FileNameFilterList @("package-lock") -FileExtensionFilterType "Include" -FileExtensionFilterList @("clang-format", "clang-tidy", "json", "md", "yml") -Verbose
 
     if ($null -eq $filesToTest) {
         Write-Information "##[warning]Test-CodeUsingPrettier:  No files found to lint for prettier! Please check if this is expected!"

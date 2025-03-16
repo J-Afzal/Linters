@@ -49,9 +49,9 @@ function Test-CodeUsingAllLinters {
 
     Write-Verbose "##[debug]Test-CodeUsingAllLinting:  Running Test-CodeUsingAllLinting..."
     Write-Verbose "##[debug]Test-CodeUsingAllLinting:  Parameters:"
-    Write-Verbose "##[debug]Test-CodeUsingAllLinting:      Platform                   : $Platform"
-    Write-Verbose "##[debug]Test-CodeUsingAllLinting:      FixClangTidyErrors         : $FixClangTidyErrors"
-    Write-Verbose "##[debug]Test-CodeUsingAllLinting:      FixClangFormatErrors       : $FixClangFormatErrors"
+    Write-Verbose "##[debug]Test-CodeUsingAllLinting:      Platform            : $Platform"
+    Write-Verbose "##[debug]Test-CodeUsingAllLinting:      FixClangTidyErrors  : $FixClangTidyErrors"
+    Write-Verbose "##[debug]Test-CodeUsingAllLinting:      FixClangFormatErrors: $FixClangFormatErrors"
 
     Test-GitIgnoreFile -Verbose
 

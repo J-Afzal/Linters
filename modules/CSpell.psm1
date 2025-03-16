@@ -27,7 +27,7 @@ function Test-CodeUsingCSpell {
     Write-Verbose "##[debug]Test-CodeUsingCSpell:  Running Test-CodeUsingCSpell..."
 
     Write-Information "##[command]Test-CodeUsingCSpell:  Retrieving all files to test against cspell..."
-    $filesToTest = Get-FilteredFilePathsToTest -DirectoryFilterType "Exclude" -DirectoryNameFilterList @("docs/html") -FileNameFilterType "Exclude" -FileNameFilterList @("package-lock") -ExcludeBinaryFiles
+    $filesToTest = Get-FilteredFilePathsToTest -DirectoryFilterType "Exclude" -DirectoryNameFilterList @("docs/html") -FileNameFilterType "Exclude" -FileNameFilterList @("package-lock") -ExcludeBinaryFiles -Verbose
 
     if ($null -eq $filesToTest) {
         Write-Information "##[warning]Test-CodeUsingCSpell:  No files found to lint for cspell! Please check if this is expected!"
@@ -218,25 +218,25 @@ function Test-CSpellConfiguration {
         }
     }
 
-    if (Compare-ObjectExact -ReferenceObject $expectedOrderOfKeys -DifferenceObject $orderOfKeys) {
+    if (Compare-ObjectExact -ReferenceObject $expectedOrderOfKeys -DifferenceObject $orderOfKeys -Verbose) {
         $lintingErrors += @{lineNumber = "-"; line = "-"; errorMessage = "Keys are missing, incorrectly ordered, incorrectly cased, or contain an unexpected key. Expected the following order of keys: 'version', 'language', 'dictionaries', 'ignorePaths', 'words', 'ignoreWords'." }
     }
 
     Write-Information "##[command]Test-CSpellConfiguration:  Checking that 'dictionaries', 'ignorePaths', 'words' and 'ignoreWords' are alphabetically ordered..."
 
-    if (Compare-ObjectExact -ReferenceObject ($cspellDictionaries | Sort-Object) -DifferenceObject $cspellDictionaries) {
+    if (Compare-ObjectExact -ReferenceObject ($cspellDictionaries | Sort-Object) -DifferenceObject $cspellDictionaries -Verbose) {
         $lintingErrors += @{lineNumber = "-"; line = "-"; errorMessage = "'dictionaries' is not alphabetically ordered." }
     }
 
-    if (Compare-ObjectExact -ReferenceObject ($cspellIgnorePaths | Sort-Object) -DifferenceObject $cspellIgnorePaths) {
+    if (Compare-ObjectExact -ReferenceObject ($cspellIgnorePaths | Sort-Object) -DifferenceObject $cspellIgnorePaths -Verbose) {
         $lintingErrors += @{lineNumber = "-"; line = "-"; errorMessage = "'ignorePaths' is not alphabetically ordered." }
     }
 
-    if (Compare-ObjectExact -ReferenceObject ($cspellWords | Sort-Object) -DifferenceObject $cspellWords) {
+    if (Compare-ObjectExact -ReferenceObject ($cspellWords | Sort-Object) -DifferenceObject $cspellWords -Verbose) {
         $lintingErrors += @{lineNumber = "-"; line = "-"; errorMessage = "'words' is not alphabetically ordered." }
     }
 
-    if (Compare-ObjectExact -ReferenceObject ($cspellIgnoreWords | Sort-Object) -DifferenceObject $cspellIgnoreWords) {
+    if (Compare-ObjectExact -ReferenceObject ($cspellIgnoreWords | Sort-Object) -DifferenceObject $cspellIgnoreWords -Verbose) {
         $lintingErrors += @{lineNumber = "-"; line = "-"; errorMessage = "'ignoreWords' is not alphabetically ordered." }
     }
 
@@ -256,7 +256,7 @@ function Test-CSpellConfiguration {
     $cspellIgnorePathsList.Remove("package-lock.json") | Out-Null
     $cspellIgnorePathsList.Remove("docs/html/") | Out-Null
 
-    if (Compare-ObjectExact -ReferenceObject ($gitignoreFileContents | Sort-Object) -DifferenceObject $cspellIgnorePathsList) {
+    if (Compare-ObjectExact -ReferenceObject ($gitignoreFileContents | Sort-Object) -DifferenceObject $cspellIgnorePathsList -Verbose) {
         $lintingErrors += @{lineNumber = "-"; line = "-"; errorMessage = "'ignorePaths' does not match the entries in .gitignore." }
     }
 
@@ -291,7 +291,7 @@ function Test-CSpellConfiguration {
     Write-Information "##[command]Test-CSpellConfiguration:  Checking for redundant 'words' and 'ignoreWords'..."
 
     # Same file list as found in Test-CodeUsingCSpell but also exclude cspell.yml (assumes cspell.yml is the only file with a file name of cspell)
-    $allFilesToCheck = Get-FilteredFilePathsToTest -DirectoryFilterType "Exclude" -DirectoryNameFilterList @("docs/html") -FileNameFilterType "Exclude" -FileNameFilterList @("cspell", "package-lock") -ExcludeBinaryFiles
+    $allFilesToCheck = Get-FilteredFilePathsToTest -DirectoryFilterType "Exclude" -DirectoryNameFilterList @("docs/html") -FileNameFilterType "Exclude" -FileNameFilterList @("cspell", "package-lock") -ExcludeBinaryFiles -Verbose
 
     [Collections.Generic.List[String]] $redundantCSpellWords = $cspellWords
     [Collections.Generic.List[String]] $redundantCSpellIgnoreWords = $cspellIgnoreWords

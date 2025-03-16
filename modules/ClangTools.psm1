@@ -169,10 +169,10 @@ function Test-CodeUsingGenericClangTool {
     Write-Verbose "##[debug]Test-CodeUsingGenericClangTool:      FixClangToolErrors: $FixClangToolErrors"
 
     Write-Information "##[command]Test-CodeUsingGenericClangTool:  Retrieving all files to test against '$ClangTool'..."
-    $filesToTest = Get-FilteredFilePathsToTest -FileExtensionFilterType "Include" -FileExtensionFilterList @("cpp", "hpp")
+    $filesToTest = Get-FilteredFilePathsToTest -FileExtensionFilterType "Include" -FileExtensionFilterList @("cpp", "hpp") -Verbose
 
     if ($null -eq $filesToTest) {
-        Write-Information "##[warning]Test-CodeUsingGenericClangTool:  No files found to lint for clang tools! Please check if this is expected!"
+        Write-Information "##[warning]Test-CodeUsingGenericClangTool:  No files found to lint for '$ClangTool'! Please check if this is expected!"
         return
     }
 

@@ -27,7 +27,7 @@ function Test-CodeUsingPSScriptAnalyzer {
     Write-Verbose "##[debug]Test-CodeUsingPSScriptAnalyzer:  Running Test-CodeUsingPSScriptAnalyzer..."
 
     Write-Information "##[command]Test-CodeUsingPSScriptAnalyzer:  Retrieving all files to test against PSScriptAnalyzer..."
-    $filesToTest = Get-FilteredFilePathsToTest -FileExtensionFilterType "Include" -FileExtensionFilterList @("ps1", "psd1", "psm1")
+    $filesToTest = Get-FilteredFilePathsToTest -FileExtensionFilterType "Include" -FileExtensionFilterList @("ps1", "psd1", "psm1") -Verbose
 
     if ($null -eq $filesToTest) {
         Write-Information "##[warning]Test-CodeUsingPSScriptAnalyzer:  No files found to lint for PSScriptAnalyzer! Please check if this is expected!"

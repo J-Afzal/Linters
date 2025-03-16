@@ -40,7 +40,7 @@ function Test-GitAttributesFile {
     $gitattributesFileContents = @(Get-Content -LiteralPath ./.gitattributes)
 
     Write-Information "##[command]Test-GitattributesFile:  Retrieving all unique file extensions and unique files without a file extension..."
-    $gitTrackedFiles = git ls-files -c | ForEach-Object { if (-Not $_.StartsWith("submodules")) { $_ } } | Split-Path -Leaf # Exclude submodules
+    $gitTrackedFiles = Invoke-ExternalCommand -ExternalCommand "git" -ExternalCommandArguments @("ls-files", "-c") -ReturnCommandOutput -ThrowError | ForEach-Object { if (-Not $_.StartsWith("submodules")) { $_ } } | Split-Path -Leaf
 
     $uniqueGitTrackedFileExtensions = $gitTrackedFiles | ForEach-Object { if ($_.Split(".").Length -gt 1) { "\.$($_.Split(".")[-1])" } } | Sort-Object | Select-Object -Unique
     $uniqueGitTrackedFileNamesWithoutExtensions = $gitTrackedFiles | ForEach-Object { if ($_.Split(".").Length -eq 1) { $_ } } | Sort-Object | Select-Object -Unique
@@ -268,7 +268,7 @@ function Test-GitIgnoreFile {
 
         $foundEntriesSorted = $foundEntries | Sort-Object
 
-        if (Compare-ObjectExact -ReferenceObject $foundEntriesSorted -DifferenceObject $foundEntries) {
+        if (Compare-ObjectExact -ReferenceObject $foundEntriesSorted -DifferenceObject $foundEntries -Verbose) {
             $lintingErrors += @{lineNumber = "-"; line = "-"; errorMessage = "Entries are not alphabetically ordered." }
         }
     }

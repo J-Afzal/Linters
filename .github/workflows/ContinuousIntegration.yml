@@ -11,6 +11,5 @@ jobs:
     linting:
         uses: ./.github/workflows/Linting.yml
         with:
-            path_to_linters_submodule_root: "."
-            path_back_to_repository_root: "."
+            path_to_linters_submodule_root: .
             run_powershell_linters: true

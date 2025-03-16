@@ -3,7 +3,7 @@ name: Linting
 on:
     workflow_call:
         inputs:
-            path_back_to_repository_root:
+            path_to_linters_submodule_root:
                 required: true
                 type: string
             run_powershell_linters:
@@ -22,7 +22,10 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                os: [macos-latest, ubuntu-latest, windows-latest]
+                os:
+                    - macos-latest
+                    - ubuntu-latest
+                    - windows-latest
 
         defaults:
             run:
@@ -40,11 +43,11 @@ jobs:
               run: |
                   echo "##[section]Installing linting dependencies..."
 
-                  echo "##[command]Changing directory to Linters submodule folder..."
-                  cd ${{ inputs.path_to_linters_submodule_root }}
-
                   echo "##[command]Installing npm dependencies..."
                   npm install ${{ inputs.path_to_linters_submodule_root }}
+
+                  echo "##[command]Installing python dependencies..."
+                  pip install -r .\requirements.txt
 
                   if [ ${{ inputs.run_cpp_linters }} == true ]
                   then
@@ -82,13 +85,13 @@ jobs:
             - name: Run gitignore linter
               if: (success() || failure()) && steps.dependencies.outcome == 'success'
               run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/Linters.psd1
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/Git.psd1
                   Test-GitIgnoreFile -Verbose
 
             - name: Run gitattributes linter
               if: (success() || failure()) && steps.dependencies.outcome == 'success'
               run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/Linters.psd1
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/Git.psd1
                   Test-GitAttributesFile -Verbose
 
             - name: Run cspell configuration linter
@@ -118,8 +121,8 @@ jobs:
             - name: Check doxygen documentation is up-to-date
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters
               run: |
-                Import-Module ${{ inputs.path_to_linters_submodule_root }}/modules/Doxygen.psd1
-                Test-DoxygenDocumentation -Platform ${{ matrix.os }} -Verbose
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/modules/Doxygen.psd1
+                  Test-DoxygenDocumentation -Platform ${{ matrix.os }} -Verbose
 
             - name: Upload doxygen documentation
               uses: actions/upload-artifact@v4

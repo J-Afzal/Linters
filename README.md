@@ -29,8 +29,5 @@ On Windows, Visual Studio 2022 can be used by opening the folder as a CMake proj
 opening the folder through the `Developer PowerShell for VS` (otherwise you may see errors around cl.exe not being found when
 configuring CMake for the clang-based linters).
 
-<!-- TODO: Markdownlint and yamllint? (requirements or toml also py pi?) so prettier only does JSON? -->
-<!-- Maybe create generic function? -->
-<!-- Add function name to all log calls -->
-<!-- Import-Module Linters.psd1 -Force everywhere -->
-<!-- change to use repo config files for linters -->
+<!-- TODO: markdownlint make config verbose for all rules -->
+<!-- Check CI passes and copy config to other repos -->

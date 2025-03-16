@@ -98,9 +98,9 @@ function Compare-ObjectExact {
 
     Write-Verbose "##[debug]Compare-ObjectExact:  Running Compare-ObjectExact..."
     Write-Verbose "##[debug]Compare-ObjectExact:  Parameters:"
-    Write-Verbose "##[debug]Compare-ObjectExact      ReferenceObject:"
+    Write-Verbose "##[debug]Compare-ObjectExact:      ReferenceObject :"
     $ReferenceObject | ForEach-Object { Write-Verbose "##[debug]Compare-ObjectExact:          $_" }
-    Write-Verbose "##[debug]    DifferenceObject:"
+    Write-Verbose "##[debug]Compare-ObjectExact:      DifferenceObject:"
     $DifferenceObject | ForEach-Object { Write-Verbose "##[debug]Compare-ObjectExact:          $_" }
 
     [Collections.Generic.List[String]] $differences = @()
@@ -339,6 +339,7 @@ function Get-FilteredFilePathsToTest {
     param(
         [Parameter(Position = 0, Mandatory = $false, ParameterSetName = "DirectorySearch")]
         [Parameter(Position = 0, Mandatory = $false, ParameterSetName = "DirectoryAndFileNameSearch")]
+        [Parameter(Position = 0, Mandatory = $false, ParameterSetName = "DirectoryAndFileExtensionSearch")]
         [Parameter(Position = 0, Mandatory = $false, ParameterSetName = "FullSearch")]
         [ValidateSet("Include", "Exclude")]
         [String]
@@ -346,6 +347,7 @@ function Get-FilteredFilePathsToTest {
 
         [Parameter(Position = 1, Mandatory = $true, ParameterSetName = "DirectorySearch")]
         [Parameter(Position = 1, Mandatory = $true, ParameterSetName = "DirectoryAndFileNameSearch")]
+        [Parameter(Position = 1, Mandatory = $true, ParameterSetName = "DirectoryAndFileExtensionSearch")]
         [Parameter(Position = 1, Mandatory = $true, ParameterSetName = "FullSearch")]
         [Object[]]
         $DirectoryNameFilterList,
@@ -366,6 +368,7 @@ function Get-FilteredFilePathsToTest {
         $FileNameFilterList,
 
         [Parameter(Position = 4, Mandatory = $false, ParameterSetName = "FileExtensionSearch")]
+        [Parameter(Position = 4, Mandatory = $false, ParameterSetName = "DirectoryAndFileExtensionSearch")]
         [Parameter(Position = 4, Mandatory = $false, ParameterSetName = "FileNameAndFileExtensionSearch")]
         [Parameter(Position = 4, Mandatory = $false, ParameterSetName = "FullSearch")]
         [ValidateSet("Include", "Exclude")]
@@ -373,6 +376,7 @@ function Get-FilteredFilePathsToTest {
         $FileExtensionFilterType,
 
         [Parameter(Position = 5, Mandatory = $true, ParameterSetName = "FileExtensionSearch")]
+        [Parameter(Position = 5, Mandatory = $true, ParameterSetName = "DirectoryAndFileExtensionSearch")]
         [Parameter(Position = 5, Mandatory = $true, ParameterSetName = "FileNameAndFileExtensionSearch")]
         [Parameter(Position = 5, Mandatory = $true, ParameterSetName = "FullSearch")]
         [Object[]]
@@ -382,6 +386,7 @@ function Get-FilteredFilePathsToTest {
         [Parameter(Position = 6, Mandatory = $false, ParameterSetName = "FileNameSearch")]
         [Parameter(Position = 6, Mandatory = $false, ParameterSetName = "FileExtensionSearch")]
         [Parameter(Position = 6, Mandatory = $false, ParameterSetName = "DirectoryAndFileNameSearch")]
+        [Parameter(Position = 6, Mandatory = $false, ParameterSetName = "DirectoryAndFileExtensionSearch")]
         [Parameter(Position = 6, Mandatory = $false, ParameterSetName = "FileNameAndFileExtensionSearch")]
         [Parameter(Position = 6, Mandatory = $false, ParameterSetName = "FullSearch")]
         [Switch]
@@ -390,16 +395,16 @@ function Get-FilteredFilePathsToTest {
 
     Write-Verbose "##[debug]Get-FilteredFilePathsToTest:  Running Get-FilteredFilePathsToTest..."
     Write-Verbose "##[debug]Get-FilteredFilePathsToTest:  Parameters:"
-    Write-Verbose "##[debug]Get-FilteredFilePathsToTest:      DirectoryFilterType: $DirectoryFilterType"
+    Write-Verbose "##[debug]Get-FilteredFilePathsToTest:      DirectoryFilterType    : $DirectoryFilterType"
     Write-Verbose "##[debug]Get-FilteredFilePathsToTest:      DirectoryNameFilterList:"
     $DirectoryNameFilterList | ForEach-Object { Write-Verbose "##[debug]Get-FilteredFilePathsToTest:          $_" }
-    Write-Verbose "##[debug]Get-FilteredFilePathsToTest:      FileNameFilterType: $FileNameFilterType"
-    Write-Verbose "##[debug]Get-FilteredFilePathsToTest:      FileNameFilterList:"
+    Write-Verbose "##[debug]Get-FilteredFilePathsToTest:      FileNameFilterType     : $FileNameFilterType"
+    Write-Verbose "##[debug]Get-FilteredFilePathsToTest:      FileNameFilterList     :"
     $FileNameFilterList | ForEach-Object { Write-Verbose "##[debug]Get-FilteredFilePathsToTest:          $_" }
     Write-Verbose "##[debug]Get-FilteredFilePathsToTest:      FileExtensionFilterType: $FileExtensionFilterType"
     Write-Verbose "##[debug]Get-FilteredFilePathsToTest:      FileExtensionFilterList:"
     $FileExtensionFilterList | ForEach-Object { Write-Verbose "##[debug]Get-FilteredFilePathsToTest:          $_" }
-    Write-Verbose "##[debug]Get-FilteredFilePathsToTest:      ExcludeBinaryFiles: $ExcludeBinaryFiles"
+    Write-Verbose "##[debug]Get-FilteredFilePathsToTest:      ExcludeBinaryFiles     : $ExcludeBinaryFiles"
 
     $allFiles = Invoke-ExternalCommand -ExternalCommand "git" -ExternalCommandArguments @("ls-files", "-c") -ReturnCommandOutput -ThrowError
 
@@ -472,10 +477,10 @@ function Get-FilteredFilePathsToTest {
 
 <#
     .SYNOPSIS
-    TODO
+    Wrapper function to call external commands.
 
     .DESCRIPTION
-    TODO
+    None.
 
     .PARAMETER ExternalCommand
     The external command to invoke.
@@ -526,11 +531,13 @@ function Invoke-ExternalCommand {
 
     Write-Verbose "##[debug]Invoke-ExternalCommand:  Running Invoke-ExternalCommand..."
     Write-Verbose "##[debug]Invoke-ExternalCommand:  Parameters:"
-    Write-Verbose "##[debug]Invoke-ExternalCommand:      ExternalCommand     : $ExternalCommand"
+    Write-Verbose "##[debug]Invoke-ExternalCommand:      ExternalCommand         : $ExternalCommand"
     Write-Verbose "##[debug]Invoke-ExternalCommand:      ExternalCommandArguments:"
     $ExternalCommandArguments | ForEach-Object { Write-Verbose "##[debug]Invoke-ExternalCommand:          $_" }
-    Write-Verbose "##[debug]Invoke-ExternalCommand:      ReturnCommandOutput : $ReturnCommandOutput"
-    Write-Verbose "##[debug]Invoke-ExternalCommand:      ThrowError          : $ThrowError"
+    Write-Verbose "##[debug]Invoke-ExternalCommand:      ReturnCommandOutput     : $ReturnCommandOutput"
+    Write-Verbose "##[debug]Invoke-ExternalCommand:      ThrowError              : $ThrowError"
+
+    Write-Information "##[command]Invoke-ExternalCommand:  Running external command '$ExternalCommand'..."
 
     if ($ReturnCommandOutput) {
         $output = (& $ExternalCommand @ExternalCommandArguments 2>&1)
