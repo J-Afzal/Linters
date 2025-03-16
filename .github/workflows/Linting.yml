@@ -122,7 +122,7 @@ jobs:
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_cpp_linters
               run: |
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/modules/Doxygen.psd1
-                  Test-DoxygenDocumentation -Platform ${{ matrix.os }} -Verbose
+                  Test-DoxygenDocumentation -Platform ${{ matrix.os }} -ResetLocalGitChanges -Verbose
 
             - name: Upload doxygen documentation
               uses: actions/upload-artifact@v4
