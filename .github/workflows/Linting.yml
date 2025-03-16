@@ -47,7 +47,7 @@ jobs:
                   npm install ${{ inputs.path_to_linters_submodule_root }}
 
                   echo "##[command]Installing python dependencies..."
-                  pip install -r .\requirements.txt
+                  pip install -r ./requirements.txt
 
                   if [ ${{ inputs.run_cpp_linters }} == true ]
                   then
