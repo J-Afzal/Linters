@@ -44,7 +44,7 @@ jobs:
                   echo "##[section]Installing linting dependencies..."
 
                   echo "##[command]Installing npm dependencies..."
-                  npm install ${{ inputs.path_to_linters_submodule_root }}
+                  npm install
 
                   echo "##[command]Installing python dependencies..."
                   pip install -r ./requirements.txt
