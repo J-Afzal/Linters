@@ -13,6 +13,7 @@ words:
     - linters
 ignoreWords:
     - altera
+    - anyofallof
     - choco
     - defenses
     - hicpp
