@@ -152,7 +152,7 @@ function Test-CSpellConfiguration {
                     Write-Verbose "##[debug]Test-CSpellConfiguration:  Current line is an 'ignorePaths' entry: '$currentLine'"
 
                     # Assumes an indentation of four characters
-                    $entry = $currentLine.TrimStart("    - ")
+                    $entry = $currentLine.TrimStart("    - ").Replace('"', "")
 
                     if ($cspellIgnorePaths.Contains($entry)) {
                         $lintingErrors += @{lineNumber = $currentLineNumber; line = "'$currentLine'"; errorMessage = "Duplicate entry within 'ignorePaths'." }

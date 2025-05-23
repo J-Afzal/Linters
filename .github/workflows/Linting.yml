@@ -112,6 +112,18 @@ jobs:
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/modules/Prettier.psd1
                   Test-CodeUsingPrettier -Verbose
 
+            - name: Run yamllint
+              if: (success() || failure()) && steps.dependencies.outcome == 'success'
+              run: |
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/modules/Yamllint.psd1
+                  Test-CodeUsingYamllint -Verbose
+
+            - name: Run black
+              if: (success() || failure()) && steps.dependencies.outcome == 'success'
+              run: |
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/modules/Black.psd1
+                  Test-CodeUsingBlack -Verbose
+
             - name: Run PSScriptAnalyzer
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_powershell_linters
               run: |
