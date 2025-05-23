@@ -1,1 +1,2 @@
+black==25.1.0
 yamllint==1.36.1

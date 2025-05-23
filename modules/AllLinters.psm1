@@ -63,6 +63,10 @@ function Test-CodeUsingAllLinters {
 
     Test-CodeUsingPrettier -Verbose
 
+    Test-CodeUsingYamllint -Verbose
+
+    Test-CodeUsingBlack -Verbose
+
     Test-CodeUsingPSScriptAnalyzer -Verbose
 
     Test-CodeUsingClangFormat -Platform $Platform -FixClangFormatErrors:$FixClangFormatErrors -Verbose
