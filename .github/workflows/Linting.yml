@@ -55,27 +55,27 @@ jobs:
                   then
                       if [ ${{ matrix.os }} == macos-latest ]
                       then
-                          brew install ninja
-                          brew install llvm
-                          brew install doxygen
+                          brew reinstall ninja@1.12.1
+                          brew install llvm@1.19.6
+                          brew install doxygen@1.14.0 --formula
 
                       elif [ ${{ matrix.os }} == ubuntu-latest ]
                       then
-                          sudo apt-get install ninja-build
+                          sudo apt-get install ninja-build=1.12.1
 
                           # Install brew to get latest llvm, clang tools and doxygen
                           test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
                           test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
                           echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
 
-                          brew install llvm
-                          brew install doxygen
+                          brew install llvm@1.19.6
+                          brew install doxygen@1.14.0 --formula
 
                       elif [ ${{ matrix.os }} == windows-latest ]
                       then
-                          choco install ninja -y
-                          choco upgrade llvm -y
-                          choco install doxygen.portable -y
+                          choco install ninja --version=1.12.1 -y
+                          choco upgrade llvm --version=1.19.6 -y
+                          choco install doxygen.portable --version=1.14.0 -y
 
                       else
                           echo "##[error]'${{ matrix.os }}' is an unsupported platform."
