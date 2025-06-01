@@ -51,8 +51,8 @@ jobs:
                   echo "##[command]Installing python dependencies..."
                   pip install -r ./requirements.txt
 
-                  #if [ ${{ inputs.run_cpp_linters }} == true ]
-                  #then
+                  if [ ${{ inputs.run_cpp_linters }} == true ]
+                  then
                       echo "##[command]Installing C++ dependencies..."
                       if [ ${{ matrix.os }} == macos-latest ]
                       then
@@ -80,7 +80,7 @@ jobs:
                       else
                           echo "##[error]'${{ matrix.os }}' is an unsupported platform."
                       fi
-                  #fi
+                  fi
 
                   echo "##[section]All linting dependencies installed!"
 
