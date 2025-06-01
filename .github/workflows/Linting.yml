@@ -18,7 +18,6 @@ on:
 jobs:
     lint:
         runs-on: ${{ matrix.os }}
-
         strategy:
             fail-fast: false
             matrix:
@@ -26,7 +25,6 @@ jobs:
                     - macos-latest
                     - ubuntu-latest
                     - windows-latest
-
         defaults:
             run:
                 shell: pwsh
