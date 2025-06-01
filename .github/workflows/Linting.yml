@@ -53,10 +53,11 @@ jobs:
 
                   #if [ ${{ inputs.run_cpp_linters }} == true ]
                   #then
+                      echo "##[command]Installing C++ dependencies..."
                       if [ ${{ matrix.os }} == macos-latest ]
                       then
-                          brew install ninja
-                          brew install llvm@19.1.6
+                          brew reinstall ninja
+                          brew install llvm@19
                           brew install doxygen@1.14.0 --formula
 
                       elif [ ${{ matrix.os }} == ubuntu-latest ]
@@ -67,7 +68,7 @@ jobs:
                           echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bashrc
 
                           brew install ninja
-                          brew install llvm@19.1.6
+                          brew install llvm@19
                           brew install doxygen@1.14.0 --formula
 
                       elif [ ${{ matrix.os }} == windows-latest ]
