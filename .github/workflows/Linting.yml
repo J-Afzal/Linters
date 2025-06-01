@@ -58,7 +58,7 @@ jobs:
                       then
                           brew reinstall ninja
                           brew install llvm
-                          brew install doxygen
+                          brew install doxygen --formula
 
                       elif [ ${{ matrix.os }} == ubuntu-latest ]
                       then
@@ -69,7 +69,7 @@ jobs:
 
                           brew install ninja
                           brew install llvm
-                          brew install doxygen
+                          brew install doxygen --formula
 
                       elif [ ${{ matrix.os }} == windows-latest ]
                       then
