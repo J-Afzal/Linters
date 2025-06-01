@@ -6,6 +6,10 @@ on:
             path_to_linters_submodule_root:
                 required: true
                 type: string
+            run_python_linters:
+                required: false
+                type: boolean
+                default: false
             run_powershell_linters:
                 required: false
                 type: boolean
@@ -117,7 +121,7 @@ jobs:
                   Test-CodeUsingYamllint -Verbose
 
             - name: Run black
-              if: (success() || failure()) && steps.dependencies.outcome == 'success'
+              if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_python_linters
               run: |
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/modules/Black.psd1
                   Test-CodeUsingBlack -Verbose
