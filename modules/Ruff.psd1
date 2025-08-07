@@ -1,6 +1,6 @@
 @{
     # Script module or binary module file associated with this manifest.
-    RootModule        = 'Black.psm1'
+    RootModule        = 'Ruff.psm1'
 
     # Version number of this module.
     ModuleVersion     = '1.0'
@@ -18,7 +18,7 @@
     Copyright         = '(c) J-Afzal. All rights reserved.'
 
     # Description of the functionality provided by this module
-    Description       = 'Provides linting functions for black.'
+    Description       = 'Provides linting functions for ruff.'
 
     # Modules that must be imported into the global environment prior to importing this module
     RequiredModules   = @(
@@ -27,7 +27,7 @@
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
     FunctionsToExport = @(
-        'Test-CodeUsingBlack'
+        'Test-CodeUsingRuff'
     )
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.

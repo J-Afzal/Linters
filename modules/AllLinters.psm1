@@ -65,7 +65,7 @@ function Test-CodeUsingAllLinters {
 
     Test-CodeUsingYamllint -Verbose
 
-    Test-CodeUsingBlack -Verbose
+    Test-CodeUsingRuff -Verbose
 
     Test-CodeUsingPSScriptAnalyzer -Verbose
 
