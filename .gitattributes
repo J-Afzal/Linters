@@ -7,11 +7,12 @@
 .editorconfig   text
 .gitattributes  text
 .gitignore      text
+.lock           text
+.python-version text
 .toml           text
 
 # Documents
 *.md            text        diff=markdown
-*.txt           text
 LICENSE         text
 
 # Scripts
