@@ -22,7 +22,6 @@
 
     # Modules that must be imported into the global environment prior to importing this module
     RequiredModules   = @(
-        './Black.psm1',
         './ClangTools.psm1',
         './CSpell.psm1',
         './Doxygen.psm1',
@@ -31,6 +30,7 @@
         './Markdownlint.psm1',
         './Prettier.psm1',
         './PSScriptAnalyzer.psm1',
+        './Ruff.psm1',
         './Yamllint.psm1'
     )
 

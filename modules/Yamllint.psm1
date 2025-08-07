@@ -35,13 +35,13 @@ function Test-CodeUsingYamllint {
     }
 
     Write-Verbose "##[debug]Test-CodeUsingYamllint:  Using the following yamllint version..."
-    Invoke-ExternalCommand -ExternalCommand "yamllint" -ExternalCommandArguments @("--version") -ThrowError -Verbose
+    Invoke-ExternalCommand -ExternalCommand "uv" -ExternalCommandArguments @("run", "yamllint", "--version") -ThrowError -Verbose
 
     Write-Information "##[command]Test-CodeUsingYamllint:  Running yamllint..."
 
-    $ExternalCommandArguments = $filesToTest + @("-c", "./.yamllint.yml")
+    $ExternalCommandArguments = @("run", "yamllint") + $filesToTest + @("-c", "./.yamllint.yml")
 
-    if (Invoke-ExternalCommand -ExternalCommand "yamllint" -ExternalCommandArguments $ExternalCommandArguments -Verbose) {
+    if (Invoke-ExternalCommand -ExternalCommand "uv" -ExternalCommandArguments $ExternalCommandArguments -Verbose) {
         Write-Error "##[error]Test-CodeUsingYamllint:  The above files have yamllint formatting errors!"
     }
 

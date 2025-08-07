@@ -1,2 +1,13 @@
-[tool.black]
+[project]
+name = "linters"
+version = "1.0.0"
+description = "All the linters!"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "ruff>=0.12.7",
+    "yamllint>=1.37.1",
+]
+
+[tool.ruff]
 line-length = 128

@@ -120,11 +120,11 @@ jobs:
                   Import-Module ${{ inputs.path_to_linters_submodule_root }}/modules/Yamllint.psd1
                   Test-CodeUsingYamllint -Verbose
 
-            - name: Run black
+            - name: Run ruff
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_python_linters
               run: |
-                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/modules/Black.psd1
-                  Test-CodeUsingBlack -Verbose
+                  Import-Module ${{ inputs.path_to_linters_submodule_root }}/modules/Ruff.psd1
+                  Test-CodeUsingRuff -Verbose
 
             - name: Run PSScriptAnalyzer
               if: (success() || failure()) && steps.dependencies.outcome == 'success' && inputs.run_powershell_linters
