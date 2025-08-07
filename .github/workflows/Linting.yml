@@ -49,7 +49,8 @@ jobs:
                   npm install
 
                   echo "##[command]Installing python dependencies..."
-                  pip install -r ./requirements.txt
+                  pip install uv
+                  uv sync
 
                   if [ ${{ inputs.run_cpp_linters }} == true ]
                   then
